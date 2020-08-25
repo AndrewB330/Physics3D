@@ -58,6 +58,10 @@ Vec3 operator*(const Vec3& lhs, T rhs) {
     return Vec3(lhs) *= rhs;
 }
 
+Vec3 operator*(T lhs, const Vec3& rhs) {
+    return Vec3(rhs) *= lhs;
+}
+
 Vec3 operator/(const Vec3& lhs, T rhs) {
     return Vec3(lhs) /= rhs;
 }

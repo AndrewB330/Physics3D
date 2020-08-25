@@ -1,4 +1,7 @@
 #pragma once
+
+const double PI = 3.14159265358979323846;
+
 using T = double;
 
 struct Vec3 {
@@ -26,6 +29,8 @@ Vec3 operator+(const Vec3& lhs, const Vec3& rhs);
 Vec3 operator-(const Vec3& lhs, const Vec3& rhs);
 
 Vec3 operator*(const Vec3& lhs, T rhs);
+
+Vec3 operator*(T lhs, const Vec3& rhs);
 
 Vec3 operator/(const Vec3& lhs, T rhs);
 

@@ -1,6 +1,7 @@
 #include "GL/freeglut.h"
 #include "drawing.h"
 #include "../model/polyhedron.h"
+#include "../model/sphere.h"
 
 namespace Graphics {
     void glVec3(const Vec3& v) {
@@ -14,25 +15,36 @@ namespace Graphics {
     }
 
     void DrawPolyhedron(const Polyhedron* p) {
-        glPushMatrix();
-        glTranslatef(p->state.position.x, p->state.position.y, p->state.position.z);
-
-        glMaterial(p->material);
+        glMaterial(p->GetMaterial());
 
         glBegin(GL_TRIANGLES);
-        for (const auto& face : p->faces) {
+        const auto& vertices = p->GetVertices();
+        for (const auto& face : p->GetFaces()) {
             glNormal3f(face.normal.x, face.normal.y, face.normal.z);
-            glVec3(p->vertices[face.v0]);
-            glVec3(p->vertices[face.v1]);
-            glVec3(p->vertices[face.v2]);
+            glVec3(vertices[face.v0]);
+            glVec3(vertices[face.v1]);
+            glVec3(vertices[face.v2]);
         }
         glEnd();
+    }
+
+    void DrawSphere(const Sphere* s) {
+        glPushMatrix();
+        auto position = s->GetState().position;
+        glTranslatef(position.x, position.y, position.z);
+
+        glMaterial(s->GetMaterial());
+
+        glutSolidSphere(s->GetRadius(), 32, 32);
         glPopMatrix();
     }
 
     void DrawObject(const Object* object) {
         if (auto p = dynamic_cast<const Polyhedron*>(object)) {
             DrawPolyhedron(p);
+        }
+        if (auto s = dynamic_cast<const Sphere*>(object)) {
+            DrawSphere(s);
         }
     }
 }
