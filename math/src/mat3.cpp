@@ -39,6 +39,16 @@ Mat3 Mat3::Identity() {
     return res;
 }
 
+Mat3 Mat3::T() const {
+    Mat3 m;
+    for(int i = 0; i < 3; i++) {
+        for(int j = 0; j < 3; j++) {
+            m[i][j] = val[j][i];
+        }
+    }
+    return m;
+}
+
 Mat3 operator*(const Mat3& a, const Mat3& b) {
     // Yes I know how to write loops
     Mat3 c;

@@ -11,6 +11,8 @@ struct Mat3 {
     Mat3 Inverse() const;
 
     static Mat3 Identity();
+
+    Mat3 T() const;
 };
 
 Mat3 operator*(const Mat3& lhs, const Mat3& rhs);

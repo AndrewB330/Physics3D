@@ -1,5 +1,12 @@
 #pragma once
-#include <engine/model/object.hpp>
+
+#include <engine/geometry/shape.hpp>
+#include <viewer/material.hpp>
+
 namespace Graphics {
-    void DrawObject(const Object* object);
+    //void DrawObject(const PhysObject* object);
+
+    void DrawShape(const Shape* shape, const RenderMaterial& material);
+
+    void DrawBBox(const BoundingBox& bbox);
 }

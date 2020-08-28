@@ -45,7 +45,7 @@ Vec3& Vec3::operator/=(T div) {
     return *this;
 }
 
-Vec3 Vec3::Norm() {
+Vec3 Vec3::Norm() const {
     return Vec3(*this) / Len();
 }
 
@@ -57,6 +57,10 @@ Vec3 Vec3::RandomUnit() {
         return RandomUnit();
     }
     return Vec3(x, y, z).Norm();
+}
+
+bool Vec3::operator<(const Vec3 &other) const {
+    return (x != other.x ? x < other.x : y < other.y);
 }
 
 Vec3 operator+(const Vec3& lhs, const Vec3& rhs) {
@@ -97,4 +101,8 @@ T Dot(const Vec3& lhs, const Vec3& rhs) {
 
 Vec3 Cross(const Vec3& a, const Vec3& b) {
     return Vec3(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
+}
+
+std::ostream& operator<<(std::ostream& out, const Vec3& v) {
+    return out << "(" << v.x << ", " << v.y << ", " << v.z << ")";
 }

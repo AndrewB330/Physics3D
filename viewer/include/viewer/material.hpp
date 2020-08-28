@@ -1,5 +1,5 @@
 #pragma once
-#include <math/rand.hpp>
+#include <math/vec3.hpp>
 
 struct Color {
     // for some glut APIs
@@ -19,12 +19,10 @@ private:
 
 Color operator*(const Color& lhs, float rhs);
 
-struct Material {
+struct RenderMaterial {
     Color ambient;
     Color diffuse;
     Color specular;
-};
 
-struct PhysicsMaterial {
-    double density;
+    static RenderMaterial Default(const Color& color);
 };

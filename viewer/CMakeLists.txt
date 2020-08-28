@@ -5,14 +5,14 @@ set(
         include/viewer/controls.hpp
         include/viewer/drawing.hpp
         include/viewer/graphics.hpp
-)
+        include/viewer/material.hpp include/viewer/object.hpp)
 
 set(
         SOURCES
         src/controls.cpp
         src/drawing.cpp
         src/graphics.cpp
-)
+        src/material.cpp)
 
 include_directories(${GLUT_INCLUDE_DIRS})
 link_directories(${GLUT_LIBRARY_DIRS})

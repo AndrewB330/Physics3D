@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
-#include <engine/model/object.hpp>
+#include <engine/physics/object.hpp>
+#include <memory>
 
 
 class World {
@@ -9,12 +10,13 @@ public:
     
     void Update(double dt);
 
-    std::vector<const Object*> GetObjects() const;
+    std::vector<const PhysObject*> GetObjects() const;
 
-    void SetGravity(Vec3 gravity);
+    void SetGravity(Vec3 gravity_);
 
-    void AddObject(Object* object);
+    void AddObject(std::unique_ptr<PhysObject> object);
 public:
+    double time_elapsed = 0.0;
 
     void Integrate(double dt);
 
@@ -24,5 +26,5 @@ public:
     void SolveConstraints();
 
     Vec3 gravity = Vec3(0, -9.8, 0);
-    std::vector<Object*> objects;
+    std::vector<std::unique_ptr<PhysObject>> objects;
 };

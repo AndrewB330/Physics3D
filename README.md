@@ -18,4 +18,4 @@ Educational project. Physics engine in 3-dimensional space.
 - [ ] Different types of joints
 - [ ] Destruction (♥ Voronoi)
 
-![Initial](/images/initial_0.gif?raw=true)
+![Initial](/images/demo_0.gif?raw=true)

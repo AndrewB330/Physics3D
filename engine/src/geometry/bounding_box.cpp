@@ -1,4 +1,4 @@
-#include "../include/engine/model/bounding_box.hpp"
+#include "engine/geometry/bounding_box.hpp"
 #include <algorithm>
 
 double BoundingBox::Volume() const {
