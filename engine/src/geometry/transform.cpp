@@ -5,7 +5,7 @@
 #include <engine/geometry/transform.hpp>
 
 Transform::Transform(const Vec3 &translation, const Quat &rotation)
-        : translation(translation), rotation(rotation) {}
+        : translation(translation), rotation(rotation), rotation_mat(rotation.Mat()) {}
 
 const Vec3 &Transform::GetTranslation() const {
     return translation;
@@ -21,7 +21,8 @@ void Transform::SetTranslation(const Vec3 &translation_) {
 }
 
 void Transform::SetRotation(const Quat &rotation_) {
-    rotation = rotation_;
+    rotation = rotation_.Norm();
+    rotation_mat = rotation.Mat();
     TransformUpdated();
 }
 
@@ -31,3 +32,7 @@ void Transform::Translate(const Vec3 &translation_) {
 }
 
 void Transform::TransformUpdated() {}
+
+const Mat3 &Transform::GetRotationMat() const {
+    return rotation_mat;
+}

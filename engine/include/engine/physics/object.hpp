@@ -9,7 +9,7 @@
 
 struct Impulse {
     Vec3 linear_impulse = Vec3();
-    Vec3 angular_momentum = Vec3();
+    Vec3 angular_impulse = Vec3();
 };
 
 class PhysObject {
@@ -18,33 +18,41 @@ public:
 
     virtual ~PhysObject() = default;
 
-    [[nodiscard]] const Inertia &GetInertia() const;
+    const Inertia &GetInertia() const;
 
-    [[nodiscard]] const PhysMaterial &GetPhysMaterial() const;
+    const PhysMaterial &GetPhysMaterial() const;
 
     void ApplyChanges(double dt);
 
-    void AddImpulse(Vec3 impulse_value, Vec3 point);
+    void AddImpulse(Vec3 linear_impulse, Vec3 angular_impulse);
+
+    void AddPseudoVelocity(const Vec3& pseudo_velocity);
 
     void SetPosition(Vec3 position);
 
     void SetRotation(Quat rotation);
 
-    void SetVelocity(const Vec3& velocity);
+    void SetVelocity(const Vec3 &velocity);
 
-    void SetAngularVelocity(const Vec3& angular_velocity);
+    void SetAngularVelocity(const Vec3 &angular_velocity);
 
     const Vec3 &GetPosition() const;
 
     const Quat &GetRotation() const;
 
-    void ResetDeltaImpulse();
+    Vec3 GetVelocity() const;
+
+    Vec3 GetAngularVelocity() const;
+
+    Vec3 GetAccumulatedVelocity() const;
+
+    Vec3 GetAccumulatedAngularVelocity() const;
 
     void SetFixed(bool val = true);
 
-    const ConvexShape* GetShape() const;
+    bool IsFixed() const;
 
-    Vec3 GetVelocityAtPoint(const Vec3& point) const;
+    const ConvexShape *GetShape() const;
 
 protected:
 
@@ -55,9 +63,11 @@ protected:
     PhysMaterial phys_material;
 
     Inertia inertia;
-    Impulse impulse;
 
+    Impulse impulse;
     Impulse delta_impulse;
+
+    Vec3 pseudo_velocity;
 
     std::unique_ptr<ConvexShape> shape;
 };

@@ -10,37 +10,23 @@ const PhysMaterial &PhysObject::GetPhysMaterial() const {
 
 void PhysObject::ApplyChanges(double dt) {
     if (!fixed) {
-        Vec3 next_position =
-                shape->GetTranslation() +
-                impulse.linear_impulse * inertia.mass_inv * dt +
-                delta_impulse.linear_impulse * inertia.mass_inv * dt * 0.5;
-
-        Quat next_rotation = (shape->GetRotation() +
-                              (0.5 * inertia.moment_of_inertia_inv * impulse.angular_momentum *
-                               shape->GetRotation()) * dt).Norm();
-        next_rotation = (next_rotation +
-                         (0.25 * inertia.moment_of_inertia_inv * delta_impulse.angular_momentum *
-                          next_rotation) * dt).Norm();
-
         impulse.linear_impulse += delta_impulse.linear_impulse;
-        impulse.angular_momentum += delta_impulse.angular_momentum;
-
-        shape->SetRotation(next_rotation);
-        shape->SetTranslation(next_position);
-    } else {
-        Vec3 next_position = shape->GetTranslation() + impulse.linear_impulse * dt;
-        Quat next_rotation = (shape->GetRotation() +
-                              (0.5 * impulse.angular_momentum * shape->GetRotation() * dt)).Norm();
-        shape->SetRotation(next_rotation);
-        shape->SetTranslation(next_position);
+        impulse.angular_impulse += delta_impulse.angular_impulse;
     }
-    impulse = Impulse();
+
+    SetPosition(GetPosition() + GetVelocity() * dt);
+    SetRotation(GetRotation() + (0.5 * GetAngularVelocity() * GetRotation()) * dt);
+
+    SetPosition(GetPosition() + pseudo_velocity * dt);
+
+    delta_impulse = Impulse();
+    pseudo_velocity = Vec3();
 }
 
-void PhysObject::AddImpulse(Vec3 impulse_value, Vec3 point) {
+void PhysObject::AddImpulse(Vec3 linear_impulse, Vec3 angular_impulse) {
     if (!fixed) {
-        delta_impulse.linear_impulse += impulse_value;
-        delta_impulse.angular_momentum += Cross(point - shape->GetTranslation(), impulse_value);
+        delta_impulse.linear_impulse += linear_impulse;
+        delta_impulse.angular_impulse += angular_impulse;
     }
 }
 
@@ -50,10 +36,8 @@ void PhysObject::SetPosition(Vec3 position) {
 
 void PhysObject::SetRotation(Quat rotation) {
     shape->SetRotation(rotation);
-}
-
-void PhysObject::ResetDeltaImpulse() {
-    delta_impulse = Impulse();
+    const Mat3& rot = shape->GetRotationMat();
+    inertia.moment_of_inertia_inv_global = rot * inertia.moment_of_inertia_inv * rot.T();
 }
 
 void PhysObject::SetFixed(bool val) {
@@ -96,21 +80,32 @@ void PhysObject::SetVelocity(const Vec3 &velocity) {
 
 void PhysObject::SetAngularVelocity(const Vec3 &angular_velocity) {
     if (fixed) {
-        impulse.angular_momentum = angular_velocity;
+        impulse.angular_impulse = angular_velocity;
     } else {
-        impulse.angular_momentum = inertia.moment_of_inertia * angular_velocity;
+        impulse.angular_impulse = inertia.moment_of_inertia * angular_velocity;
     }
 }
 
-Vec3 PhysObject::GetVelocityAtPoint(const Vec3 &point) const {
-    if (fixed) {
-        return Vec3();
-    }
-    Mat3 rot = GetRotation().Mat();
-    Mat3 I = rot * inertia.moment_of_inertia_inv * rot.T();
+bool PhysObject::IsFixed() const {
+    return fixed;
+}
 
-    return impulse.linear_impulse * inertia.mass_inv +
-           Cross(I * impulse.angular_momentum, point - GetPosition()) +
-           delta_impulse.linear_impulse * inertia.mass_inv +
-           Cross(I * delta_impulse.angular_momentum, point - GetPosition());
+Vec3 PhysObject::GetVelocity() const {
+    return inertia.mass_inv * impulse.linear_impulse;
+}
+
+Vec3 PhysObject::GetAngularVelocity() const {
+    return inertia.moment_of_inertia_inv_global * impulse.angular_impulse;
+}
+
+void PhysObject::AddPseudoVelocity(const Vec3 &pseudo_velocity_) {
+    pseudo_velocity += pseudo_velocity_;
+}
+
+Vec3 PhysObject::GetAccumulatedVelocity() const {
+    return inertia.mass_inv * (impulse.linear_impulse + delta_impulse.linear_impulse) + pseudo_velocity;
+}
+
+Vec3 PhysObject::GetAccumulatedAngularVelocity() const {
+    return inertia.moment_of_inertia_inv_global * (impulse.angular_impulse + delta_impulse.angular_impulse);
 }

@@ -1,6 +1,4 @@
-#include <engine/physics/constraints.hpp>
-#include "../include/engine/world.hpp"
-#include "engine/geometry/collision.hpp"
+#include <engine/world.hpp>
 
 void World::Update(double dt) {
     Integrate(dt);
@@ -35,30 +33,45 @@ void World::Integrate(double dt) {
 }
 
 void World::DetectCollisions() {
-    std::vector<Constraint> cs;
+    collisions.clear();
     for(int i = 1; i < objects.size(); i++) {
         for(int j = 0; j < i; j++) {
+            if (objects[i]->IsFixed() && objects[j]->IsFixed()) {
+                continue;
+            }
             CollisionDetector detector(objects[i]->GetShape(), objects[j]->GetShape());
             for(auto c : detector.GetCollisionPoints()) {
-                cs.push_back(Constraint(objects[i].get(), objects[j].get(), c));
+                collisions.push_back(CollisionRecord{objects[i].get(), objects[j].get(), c});
             }
         }
     }
-    for(int i = 0; i < 20; i++) {
-        for(auto c : cs) {
-            Vec3 impulse = c.GetImpulse();
-            c.a->AddImpulse(impulse, c.collision.point);
-            c.b->AddImpulse(-impulse, c.collision.point);
+}
+
+void World::GenerateConstraints() {
+    generated_constraints.clear();
+
+    for(auto record : collisions) {
+        generated_constraints.push_back(std::make_unique<CollisionConstraint>(record.a, record.b, record.collision));
+    }
+}
+
+void World::InitializeVariables(double dt) {
+    for (const auto &o : objects) {
+        o->AddImpulse(gravity * o->GetInertia().mass * dt, Vec3());
+    }
+}
+
+void World::SolveConstraints() {
+    for(int iter = 0; iter < 20; iter++) {
+        for(const auto& constraint : generated_constraints) {
+            constraint->Solve();
+        }
+        for(const auto& constraint : constraints) {
+            constraint->Solve();
         }
     }
 }
 
-void World::GenerateConstraints() {}
-
-void World::InitializeVariables(double dt) {
-    for (const auto &o : objects) {
-        o->AddImpulse(gravity * o->GetInertia().mass * dt, o->GetShape()->GetTranslation());
-    }
+void World::AddConstraint(std::unique_ptr<Constraint> constraint) {
+    constraints.push_back(std::move(constraint));
 }
-
-void World::SolveConstraints() {}

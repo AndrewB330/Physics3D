@@ -1,4 +1,6 @@
 #pragma once
+
+#include <functional>
 #include "graphics.hpp"
 
 namespace Controls {
@@ -9,4 +11,10 @@ namespace Controls {
     void Update();
 
     void LoadTransform();
+
+    void AddKeyboardHandler(std::function<void(unsigned char, int, int)> handler);
+
+    Vec3 GetCameraPosition();
+
+    Vec3 GetCamForward();
 }

@@ -13,14 +13,14 @@ namespace Controls {
     struct Camera {
 
         double angle_x = 0.0;
-        double angle_y = 0.0;
+        double angle_y = -0.4;
 
-        Vec3 position = Vec3();
+        Vec3 position = Vec3(0, 1, 3);
         Vec3 velocity = Vec3();
-        Vec3 forward = Vec3(0, 0, -1);
+        Vec3 forward = Vec3(-cos(angle_y) * sin(angle_x), sin(angle_y), -cos(angle_y) * cos(angle_x));
         Vec3 up = Vec3(0, 1, 0);
 
-        const double acceleration = 0.5;
+        const double acceleration = 1.5;
         double velocity_fade_factor = 0.95;
 
         bool cursor = true;
@@ -182,6 +182,18 @@ namespace Controls {
             camera_target.x, camera_target.y, camera_target.z,
             camera.up.x, camera.up.y, camera.up.z
         );
+    }
+
+    void AddKeyboardHandler(std::function<void(unsigned char, int, int)> handler) {
+        keyboard_handlers.RegisterHandler(handler);
+    }
+
+    Vec3 GetCameraPosition() {
+        return camera.position;
+    }
+
+    Vec3 GetCamForward() {
+        return camera.forward;
     }
 
 }

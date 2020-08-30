@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-
 #include <math/vec3.hpp>
 #include <math/quat.hpp>
 #include <engine/geometry/utils.hpp>
@@ -24,7 +23,7 @@ public:
 
     virtual Vec3 GetSupportingVector(const Vec3 &direction) const = 0;
 
-    virtual bool IsPointInside(const Vec3& point) const = 0;
+    virtual bool IsPointInside(const Vec3 &point) const = 0;
 };
 
 class SphereShape : public ConvexShape {
@@ -35,7 +34,7 @@ public:
 
     Vec3 GetSupportingVector(const Vec3 &direction) const override;
 
-    bool IsPointInside(const Vec3& point) const override;
+    bool IsPointInside(const Vec3 &point) const override;
 
     double GetRadius() const;
 
@@ -53,11 +52,11 @@ public:
 
     Vec3 GetSupportingVector(const Vec3 &direction) const override;
 
-    bool IsPointInside(const Vec3& point) const override;
+    bool IsPointInside(const Vec3 &point) const override;
 
-    const std::vector<Vec3>& GetVertices() const;
+    const std::vector<Vec3> &GetVertices() const;
 
-    const std::vector<Triple>& GetFaces() const;
+    const std::vector<Triple> &GetFaces() const;
 
 protected:
     void TransformUpdated() override;
@@ -90,7 +89,7 @@ public:
 
     Vec3 GetSupportingVector(const Vec3 &direction) const override;
 
-    bool IsPointInside(const Vec3& point) const override;
+    bool IsPointInside(const Vec3 &point) const override;
 
 private:
     const ConvexShape *a;

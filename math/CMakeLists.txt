@@ -6,7 +6,7 @@ set(
         include/math/mat3.hpp
         include/math/quat.hpp
         include/math/rand.hpp
-)
+        include/math/vec2.hpp)
 
 set(
         SOURCES
@@ -14,7 +14,7 @@ set(
         src/mat3.cpp
         src/quat.cpp
         src/rand.cpp
-)
+        src/vec2.cpp)
 
 add_library(math ${HEADERS} ${SOURCES})
 

@@ -49,6 +49,20 @@ namespace Graphics {
             auto position = s->GetTranslation();
             glTranslatef(position.x, position.y, position.z);
             glutSolidSphere(s->GetRadius(), 32, 32);
+            glBegin(GL_LINES);
+            glVec3(Vec3());
+            glVec3( s->GetRotationMat() * Vec3(+1,0,0) * (s->GetRadius() + 0.05));
+            glVec3(Vec3());
+            glVec3( s->GetRotationMat() * Vec3(-1,0,0) * (s->GetRadius() + 0.05));
+            glVec3(Vec3());
+            glVec3( s->GetRotationMat() * Vec3(0,+1,0) * (s->GetRadius() + 0.05));
+            glVec3(Vec3());
+            glVec3( s->GetRotationMat() * Vec3(0,-1,0) * (s->GetRadius() + 0.05));
+            glVec3(Vec3());
+            glVec3( s->GetRotationMat() * Vec3(0,0,+1) * (s->GetRadius() + 0.05));
+            glVec3(Vec3());
+            glVec3( s->GetRotationMat() * Vec3(0,0,-1) * (s->GetRadius() + 0.05));
+            glEnd();
             glPopMatrix();
         }
     }

@@ -5,8 +5,9 @@
 
 class Transform {
 public:
-    Transform() = default;
     virtual ~Transform() = default;
+
+    Transform() = default;
 
     Transform(const Vec3 &translation, const Quat &rotation);
 
@@ -14,15 +15,18 @@ public:
 
     const Quat &GetRotation() const;
 
+    const Mat3& GetRotationMat() const;
+
     void SetTranslation(const Vec3 &translation);
 
     void SetRotation(const Quat &rotation);
 
-    void Translate(const Vec3 & translation);
+    void Translate(const Vec3 &translation);
 
 protected:
     virtual void TransformUpdated();
 
     Vec3 translation = Vec3();
     Quat rotation = Quat::Identity();
+    Mat3 rotation_mat = Mat3::Identity();
 };

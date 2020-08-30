@@ -85,7 +85,7 @@ bool ConvexPolyhedronShape::IsPointInside(const Vec3 &point) const {
                         transformed_vertices[v2] -
                         transformed_vertices[v0]
                 ));
-        if (volume > 0) {
+        if (volume > 1e-6) {
             return false;
         }
     }

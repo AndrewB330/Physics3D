@@ -14,9 +14,9 @@ struct Vec3 {
 
     Vec3();
 
-    [[nodiscard]] T LenSqr() const;
+    T LenSqr() const;
 
-    [[nodiscard]] T Len() const;
+    T Len() const;
 
     Vec3 &operator+=(const Vec3 &other);
 
