@@ -44,6 +44,8 @@ Vec3 operator-(const Vec3 &lhs, const Vec3 &rhs);
 
 Vec3 operator*(const Vec3 &lhs, T rhs);
 
+Vec3 operator*(const Vec3 &lhs, const Vec3& rhs);
+
 Vec3 operator*(T lhs, const Vec3 &rhs);
 
 Vec3 operator/(const Vec3 &lhs, T rhs);
@@ -57,3 +59,5 @@ T Dist(const Vec3 &lhs, const Vec3 &rhs);
 T Dot(const Vec3 &lhs, const Vec3 &rhs);
 
 Vec3 Cross(const Vec3 &a, const Vec3 &b);
+
+Vec3 Sign(const Vec3& vec);

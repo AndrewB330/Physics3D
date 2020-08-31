@@ -17,6 +17,8 @@ public:
 
     const Mat3& GetRotationMat() const;
 
+    const Mat3 &GetInvRotationMat() const;
+
     void SetTranslation(const Vec3 &translation);
 
     void SetRotation(const Quat &rotation);
@@ -29,4 +31,5 @@ protected:
     Vec3 translation = Vec3();
     Quat rotation = Quat::Identity();
     Mat3 rotation_mat = Mat3::Identity();
+    Mat3 inv_rotation_mat = Mat3::Identity();
 };

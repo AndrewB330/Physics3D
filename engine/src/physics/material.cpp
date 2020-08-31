@@ -1,11 +1,11 @@
 #include <engine/physics/material.hpp>
 
 PhysMaterial PhysMaterial::DEFAULT = PhysMaterial();
-PhysMaterial PhysMaterial::WOOD = PhysMaterial(700, 0.45, 0.2);
-PhysMaterial PhysMaterial::STEEL = PhysMaterial(7000, 0.7, 0.0);
-PhysMaterial PhysMaterial::ICE = PhysMaterial(900, 0.05, 0.0);
-PhysMaterial PhysMaterial::STONE = PhysMaterial(3000, 0.95, 0.0);
-PhysMaterial PhysMaterial::CONCRETE = PhysMaterial(2400, 0.9, 0.0);
+PhysMaterial PhysMaterial::WOOD = PhysMaterial(700, 0.5, 0.1);
+PhysMaterial PhysMaterial::STEEL = PhysMaterial(7000, 0.7, 0.05);
+PhysMaterial PhysMaterial::ICE = PhysMaterial(900, 0.05, 0.05);
+PhysMaterial PhysMaterial::STONE = PhysMaterial(3000, 0.95, 0.05);
+PhysMaterial PhysMaterial::CONCRETE = PhysMaterial(2400, 0.9, 0.01);
 PhysMaterial PhysMaterial::RUBBER = PhysMaterial(1500, 0.7, 0.7);
 
 PhysMaterial::PhysMaterial(double density, double friction, double bounciness)

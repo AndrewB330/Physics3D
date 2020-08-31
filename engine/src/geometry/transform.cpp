@@ -23,6 +23,7 @@ void Transform::SetTranslation(const Vec3 &translation_) {
 void Transform::SetRotation(const Quat &rotation_) {
     rotation = rotation_.Norm();
     rotation_mat = rotation.Mat();
+    inv_rotation_mat = rotation_mat.T();
     TransformUpdated();
 }
 
@@ -35,4 +36,8 @@ void Transform::TransformUpdated() {}
 
 const Mat3 &Transform::GetRotationMat() const {
     return rotation_mat;
+}
+
+const Mat3 &Transform::GetInvRotationMat() const {
+    return inv_rotation_mat;
 }

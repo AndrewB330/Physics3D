@@ -4,8 +4,8 @@
 #include <math/mat3.hpp>
 #include <math/quat.hpp>
 #include <engine/physics/material.hpp>
-#include <engine/geometry/shape.hpp>
 #include <engine/physics/inertia.hpp>
+#include <engine/collision/collider.hpp>
 
 struct Impulse {
     Vec3 linear_impulse = Vec3();
@@ -14,7 +14,7 @@ struct Impulse {
 
 class PhysObject {
 public:
-    PhysObject(std::unique_ptr<ConvexShape> shape, PhysMaterial material);
+    PhysObject(std::shared_ptr<Collider> collider, const PhysMaterial &material, bool fixed = false);
 
     virtual ~PhysObject() = default;
 
@@ -25,8 +25,6 @@ public:
     void ApplyChanges(double dt);
 
     void AddImpulse(Vec3 linear_impulse, Vec3 angular_impulse);
-
-    void AddPseudoVelocity(const Vec3& pseudo_velocity);
 
     void SetPosition(Vec3 position);
 
@@ -52,7 +50,7 @@ public:
 
     bool IsFixed() const;
 
-    const ConvexShape *GetShape() const;
+    std::shared_ptr<const Collider> GetCollider() const;
 
 protected:
 
@@ -67,7 +65,15 @@ protected:
     Impulse impulse;
     Impulse delta_impulse;
 
-    Vec3 pseudo_velocity;
-
-    std::unique_ptr<ConvexShape> shape;
+    std::shared_ptr<Collider> collider;
 };
+
+std::unique_ptr<PhysObject>
+CreateSphereObject(double radius, const PhysMaterial &mat, Vec3 position = Vec3(), Vec3 velocity = Vec3(),
+                   Quat rotation = Quat::Identity(), Vec3 angular_velocity = Vec3(),
+                   bool fixed = false);
+
+std::unique_ptr<PhysObject>
+CreateBoxObject(Vec3 size, const PhysMaterial &mat, Vec3 position = Vec3(), Vec3 velocity = Vec3(),
+                Quat rotation = Quat::Identity(), Vec3 angular_velocity = Vec3(),
+                bool fixed = false);

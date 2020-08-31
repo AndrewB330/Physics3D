@@ -3,7 +3,7 @@
 #include <vector>
 #include <engine/physics/object.hpp>
 #include <memory>
-#include <engine/geometry/collision.hpp>
+#include <engine/collision/collision_engine.hpp>
 #include <engine/physics/constraints.hpp>
 
 struct CollisionRecord {
@@ -29,19 +29,18 @@ public:
 public:
     void Integrate(double dt);
 
-    void DetectCollisions();
-
     void GenerateConstraints();
 
     void InitializeVariables(double dt);
 
     void SolveConstraints();
 
-    std::vector<CollisionRecord> collisions;
     std::vector<std::unique_ptr<Constraint>> constraints;
     std::vector<std::unique_ptr<Constraint>> generated_constraints;
-    std::vector<std::unique_ptr<PhysObject>> objects;
+    std::vector<std::shared_ptr<PhysObject>> objects;
     Vec3 gravity;
+
+    CollisionEngine collision_engine;
 
     double time_elapsed = 0.0;
 };

@@ -17,10 +17,7 @@ void PhysObject::ApplyChanges(double dt) {
     SetPosition(GetPosition() + GetVelocity() * dt);
     SetRotation(GetRotation() + (0.5 * GetAngularVelocity() * GetRotation()) * dt);
 
-    SetPosition(GetPosition() + pseudo_velocity * dt);
-
     delta_impulse = Impulse();
-    pseudo_velocity = Vec3();
 }
 
 void PhysObject::AddImpulse(Vec3 linear_impulse, Vec3 angular_impulse) {
@@ -31,12 +28,12 @@ void PhysObject::AddImpulse(Vec3 linear_impulse, Vec3 angular_impulse) {
 }
 
 void PhysObject::SetPosition(Vec3 position) {
-    shape->SetTranslation(position);
+    collider->SetTranslation(position);
 }
 
 void PhysObject::SetRotation(Quat rotation) {
-    shape->SetRotation(rotation);
-    const Mat3& rot = shape->GetRotationMat();
+    collider->SetRotation(rotation);
+    const Mat3 &rot = collider->GetRotationMat();
     inertia.moment_of_inertia_inv_global = rot * inertia.moment_of_inertia_inv * rot.T();
 }
 
@@ -46,28 +43,21 @@ void PhysObject::SetFixed(bool val) {
 }
 
 const Vec3 &PhysObject::GetPosition() const {
-    return shape->GetTranslation();
+    return collider->GetTranslation();
 }
 
 const Quat &PhysObject::GetRotation() const {
-    return shape->GetRotation();
-}
-
-PhysObject::PhysObject(std::unique_ptr<ConvexShape> shape, PhysMaterial material)
-        : shape(std::move(shape)), phys_material(material) {
-    RecalculateInertia();
+    return collider->GetRotation();
 }
 
 void PhysObject::RecalculateInertia() {
     if (fixed) {
         inertia = Inertia();
     } else {
-        inertia = ComputeInertia(shape.get(), phys_material);
+        inertia = ComputeInertia(std::const_pointer_cast<const Collider>(collider), phys_material);
+        const Mat3 &rot = collider->GetRotationMat();
+        inertia.moment_of_inertia_inv_global = rot * inertia.moment_of_inertia_inv * rot.T();
     }
-}
-
-const ConvexShape *PhysObject::GetShape() const {
-    return shape.get();
 }
 
 void PhysObject::SetVelocity(const Vec3 &velocity) {
@@ -98,14 +88,45 @@ Vec3 PhysObject::GetAngularVelocity() const {
     return inertia.moment_of_inertia_inv_global * impulse.angular_impulse;
 }
 
-void PhysObject::AddPseudoVelocity(const Vec3 &pseudo_velocity_) {
-    pseudo_velocity += pseudo_velocity_;
-}
-
 Vec3 PhysObject::GetAccumulatedVelocity() const {
-    return inertia.mass_inv * (impulse.linear_impulse + delta_impulse.linear_impulse) + pseudo_velocity;
+    return inertia.mass_inv * (impulse.linear_impulse + delta_impulse.linear_impulse);
 }
 
 Vec3 PhysObject::GetAccumulatedAngularVelocity() const {
     return inertia.moment_of_inertia_inv_global * (impulse.angular_impulse + delta_impulse.angular_impulse);
+}
+
+PhysObject::PhysObject(std::shared_ptr<Collider> collider, const PhysMaterial &material, bool fixed)
+        : collider(std::move(collider)), phys_material(material), fixed(fixed) {
+    RecalculateInertia();
+}
+
+std::shared_ptr<const Collider> PhysObject::GetCollider() const {
+    return std::const_pointer_cast<const Collider>(collider);
+}
+
+std::unique_ptr<PhysObject>
+CreateSphereObject(double radius, const PhysMaterial &mat, Vec3 position, Vec3 velocity, Quat rotation,
+                   Vec3 angular_velocity, bool fixed) {
+    auto object = std::make_unique<PhysObject>(
+            CreateSphereCollider(radius, position, rotation),
+            mat,
+            fixed
+    );
+    object->SetVelocity(velocity);
+    object->SetAngularVelocity(angular_velocity);
+    return object;
+}
+
+std::unique_ptr<PhysObject>
+CreateBoxObject(Vec3 size, const PhysMaterial &mat, Vec3 position, Vec3 velocity, Quat rotation, Vec3 angular_velocity,
+                bool fixed) {
+    auto object = std::make_unique<PhysObject>(
+            CreateBoxCollider(size, position, rotation),
+            mat,
+            fixed
+    );
+    object->SetVelocity(velocity);
+    object->SetAngularVelocity(angular_velocity);
+    return object;
 }

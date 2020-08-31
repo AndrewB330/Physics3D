@@ -1,19 +1,20 @@
 #include <engine/physics/inertia.hpp>
 
-Inertia ComputeInertia(const Shape *shape, const PhysMaterial &material) {
-    if (auto s = dynamic_cast<const SphereShape*>(shape)) {
+Inertia ComputeInertia(const std::shared_ptr<const Collider>& collider, const PhysMaterial &material) {
+    auto orig = collider->GetOrigShape();
+    if (auto s = dynamic_cast<const SphereShape*>(orig)) {
         Inertia inertia;
-        inertia.mass = 4.0 / 3 * PI * s->GetRadius() * s->GetRadius() * s->GetRadius() * material.GetDensity();
+        double radius = s->GetSupportingVector(Vec3(1,0,0)).Len();
+        inertia.mass = 4.0 / 3 * PI * radius * radius * radius * material.GetDensity();
         inertia.mass_inv = 1.0 / inertia.mass;
 
-        inertia.moment_of_inertia = Mat3::Identity() * (inertia.mass * s->GetRadius() * s->GetRadius() / 5.0);
+        inertia.moment_of_inertia = Mat3::Identity() * (inertia.mass * radius * radius / 5.0);
         inertia.moment_of_inertia_inv = inertia.moment_of_inertia.Inverse();
         inertia.moment_of_inertia_inv_global = inertia.moment_of_inertia_inv;
         return inertia;
-    }
-    if (auto b = dynamic_cast<const BoxShape*>(shape)) {
+    } else {
         Inertia inertia;
-        Vec3 size = b->GetSize();
+        Vec3 size = orig->GetSupportingVector(Vec3(1,1,1)) * 2;
         inertia.mass = size.x * size.y * size.z * material.GetDensity();
         inertia.mass_inv = 1.0 / inertia.mass;
 
@@ -25,5 +26,4 @@ Inertia ComputeInertia(const Shape *shape, const PhysMaterial &material) {
         inertia.moment_of_inertia_inv_global = inertia.moment_of_inertia_inv;
         return inertia;
     }
-    return Inertia();
 }

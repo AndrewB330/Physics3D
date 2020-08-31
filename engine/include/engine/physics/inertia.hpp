@@ -1,5 +1,6 @@
 #include <math/mat3.hpp>
-#include <engine/geometry/shape.hpp>
+#include <memory>
+#include <engine/collision/collider.hpp>
 #include "material.hpp"
 
 struct Inertia {
@@ -9,8 +10,9 @@ struct Inertia {
     Mat3 moment_of_inertia = Mat3::Identity();
     Mat3 moment_of_inertia_inv = Mat3();
 
+    /**  R * moment_of_inertia_inv * R^T  **/
     Mat3 moment_of_inertia_inv_global = Mat3();
 };
 
-Inertia ComputeInertia(const Shape* shape, const PhysMaterial& material);
+Inertia ComputeInertia(const std::shared_ptr<const Collider>& shape, const PhysMaterial& material);
 

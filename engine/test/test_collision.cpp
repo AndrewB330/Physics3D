@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <engine/geometry/collision.hpp>
+#include <engine/collision/collision.hpp>
 
 const double DISTANCE_EPSILON = 1e-7;
 

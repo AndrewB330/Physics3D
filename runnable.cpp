@@ -29,55 +29,76 @@ void render() {
 
     auto objs = world.GetObjects();
     for (int i = 0; i < objs.size(); i++) {
-        Graphics::DrawShape(objs[i]->GetShape(), materials[i]);
+        Graphics::DrawCollider(objs[i]->GetCollider().get(), materials[i]);
         //Graphics::DrawBBox(objs[i]->GetShape()->GetBBox());
     }
 }
 
 void init() {
-    for (int i = 0; i < 200; i++) {
+    for (int i = 0; i < 1000; i++) {
         RenderMaterial mat;
         mat.diffuse = Color::GetRandomHsl();
         mat.ambient = mat.diffuse * 0.5;
         materials.push_back(mat);
     }
     {
-        // Platform
-        auto box_shape = std::make_unique<BoxShape>(8, 1, 8);
-        box_shape->SetTranslation(Vec3(0, -4, 0));
-        auto phys_object = std::make_unique<PhysObject>(std::move(box_shape), PhysMaterial::STONE);
-        world.AddObject(std::move(phys_object));
+        // Build Platform
+        double PLATFORM_SIZE = 8.0;
+        double BORDER_HEIGHT = 2.5;
+        double BORDER_WIDTH = 0.5;
+        Vec3 PLATFORM_POS = Vec3(0, -3, 0);
+        world.AddObject(std::make_unique<PhysObject>(
+                CreateBoxCollider(
+                        {PLATFORM_SIZE, 1, PLATFORM_SIZE},
+                        PLATFORM_POS
+                ),
+                PhysMaterial::STONE,
+                true
+        ));
+        world.AddObject(std::make_unique<PhysObject>(
+                CreateSphereCollider(
+                        0.4,
+                        PLATFORM_POS + Vec3(0, 2, 0)
+                ),
+                PhysMaterial::STONE,
+                true
+        ));
+        world.AddObject(std::make_unique<PhysObject>(
+                CreateBoxCollider(
+                        {PLATFORM_SIZE, BORDER_HEIGHT, BORDER_WIDTH},
+                        PLATFORM_POS + Vec3(0, BORDER_HEIGHT * 0.5 + 0.5, (PLATFORM_SIZE + BORDER_WIDTH) * 0.5)
+                ),
+                PhysMaterial::STONE,
+                true
+        ));
+        world.AddObject(std::make_unique<PhysObject>(
+                CreateBoxCollider(
+                        {PLATFORM_SIZE, BORDER_HEIGHT, BORDER_WIDTH},
+                        PLATFORM_POS + Vec3(0, BORDER_HEIGHT * 0.5+ 0.5, -(PLATFORM_SIZE + BORDER_WIDTH) * 0.5)
+                ),
+                PhysMaterial::STONE,
+                true
+        ));
+        world.AddObject(std::make_unique<PhysObject>(
+                CreateBoxCollider(
+                        {BORDER_WIDTH, BORDER_HEIGHT, PLATFORM_SIZE},
+                        PLATFORM_POS + Vec3((PLATFORM_SIZE + BORDER_WIDTH) * 0.5, BORDER_HEIGHT * 0.5 + 0.5, 0)
+                ),
+                PhysMaterial::STONE,
+                true
+        ));
+        world.AddObject(std::make_unique<PhysObject>(
+                CreateBoxCollider(
+                        {BORDER_WIDTH, BORDER_HEIGHT, PLATFORM_SIZE},
+                        PLATFORM_POS + Vec3(-(PLATFORM_SIZE + BORDER_WIDTH) * 0.5, BORDER_HEIGHT * 0.5 + 0.5, 0)
+                ),
+                PhysMaterial::STONE,
+                true
+        ));
     }
-    {
-        // Platform
-        auto box_shape = std::make_unique<BoxShape>(8.0, 0.5, 0.5);
-        box_shape->SetTranslation(Vec3(0, -3.50, -4.25));
-        auto phys_object = std::make_unique<PhysObject>(std::move(box_shape), PhysMaterial::STONE);
-        world.AddObject(std::move(phys_object));
-    }
-    {
-        // Platform
-        auto box_shape = std::make_unique<BoxShape>(8.0, 0.5, 0.5);
-        box_shape->SetTranslation(Vec3(0, -3.50, 4.25));
-        auto phys_object = std::make_unique<PhysObject>(std::move(box_shape), PhysMaterial::STONE);
-        world.AddObject(std::move(phys_object));
-    }
-    {
-        // Platform
-        auto box_shape = std::make_unique<BoxShape>(0.5, 0.5, 8);
-        box_shape->SetTranslation(Vec3(-4.25, -3.5, 0));
-        auto phys_object = std::make_unique<PhysObject>(std::move(box_shape), PhysMaterial::STONE);
-        world.AddObject(std::move(phys_object));
-    }
-    {
-        // Platform
-        auto box_shape = std::make_unique<BoxShape>(0.5, 0.5, 8);
-        box_shape->SetTranslation(Vec3(4.25, -3.50, 0));
-        auto phys_object = std::make_unique<PhysObject>(std::move(box_shape), PhysMaterial::STONE);
-        world.AddObject(std::move(phys_object));
-    }
+
     /*{
-        double S = 4;
+        double S = 2;
         std::vector<std::unique_ptr<PhysObject>> objects_left;
         std::vector<std::unique_ptr<PhysObject>> objects_right;
 
@@ -97,7 +118,7 @@ void init() {
 
         double h = 4.0 - 0.2;
 
-        for(int i = 0; i < 8; i++) {
+        for (int i = 0; i < 8; i++) {
             auto chain = std::make_unique<BoxShape>(0.1, 0.4, 0.1);
             chain->SetTranslation(Vec3(2, h - 0.3, 0));
             auto chain_object = std::make_unique<PhysObject>(std::move(chain), PhysMaterial::STONE);
@@ -108,7 +129,7 @@ void init() {
 
         h = 4.0 - 0.2;
 
-        for(int i = 0; i < 8; i++) {
+        for (int i = 0; i < 8; i++) {
             auto chain = std::make_unique<BoxShape>(0.1, 0.4, 0.1);
             chain->SetTranslation(Vec3(-2, h - 0.3, 0));
             auto chain_object = std::make_unique<PhysObject>(std::move(chain), PhysMaterial::STONE);
@@ -122,7 +143,7 @@ void init() {
         auto ball_object = std::make_unique<PhysObject>(std::move(ball), PhysMaterial::STONE);
         ball_object->SetFixed(false);
 
-        for(int i = 0; i + 1 < objects_left.size(); i++) {
+        for (int i = 0; i + 1 < objects_left.size(); i++) {
             world.AddConstraint(std::make_unique<SpringConstraint>(
                     objects_left[i].get(),
                     objects_left[i + 1].get(),
@@ -141,7 +162,7 @@ void init() {
             ));
         }
 
-        for(int i = 0; i + 1 < objects_right.size(); i++) {
+        for (int i = 0; i + 1 < objects_right.size(); i++) {
             world.AddConstraint(std::make_unique<SpringConstraint>(
                     objects_right[i].get(),
                     objects_right[i + 1].get(),
@@ -196,10 +217,10 @@ void init() {
                 S
         ));
 
-        for(auto & o : objects_left) {
+        for (auto &o : objects_left) {
             world.AddObject(std::move(o));
         }
-        for(auto & o : objects_right) {
+        for (auto &o : objects_right) {
             world.AddObject(std::move(o));
         }
         world.AddObject(std::move(ball_object));
@@ -220,26 +241,26 @@ int main(int argc, char **argv) {
 
     Controls::AddKeyboardHandler([](unsigned char c, int, int) {
         if (c == 'q' || c == 'Q') {
-            auto box_shape = std::make_unique<SphereShape>(0.4);
-            box_shape->SetTranslation(Controls::GetCameraPosition() + Controls::GetCamForward());
-            auto phys_object = std::make_unique<PhysObject>(std::move(box_shape), PhysMaterial::STEEL);
-            phys_object->SetFixed(false);
-            phys_object->SetVelocity(Controls::GetCamForward() * 10);
-            world.AddObject(std::move(phys_object));
+            world.AddObject(CreateSphereObject(
+                    0.4,
+                    PhysMaterial::STEEL,
+                    Controls::GetCameraPosition() + Controls::GetCamForward() + Vec3::RandomUnit(),
+                    Controls::GetCamForward() * 10
+            ));
         }
         if (c == 'e' || c == 'E') {
-            auto box_shape = std::make_unique<BoxShape>(0.8);
-            box_shape->SetTranslation(Controls::GetCameraPosition() + Controls::GetCamForward());
-            box_shape->SetRotation(Quat::RandomRotation());
-            auto phys_object = std::make_unique<PhysObject>(std::move(box_shape), PhysMaterial::WOOD);
-            phys_object->SetFixed(false);
-            phys_object->SetVelocity(Controls::GetCamForward() * 10);
-            world.AddObject(std::move(phys_object));
+            world.AddObject(CreateBoxObject(
+                    Vec3(0.4, 0.4, 0.4),
+                    PhysMaterial::STEEL,
+                    Controls::GetCameraPosition() + Controls::GetCamForward(),
+                    Controls::GetCamForward() * 10,
+                    Quat::RandomRotation()
+            ));
         }
     });
 
     for (int i = 0; i < 1e9; i++) {
-        world.Update(1 / 1200.0);
+        world.Update(timer.GetElapsedSeconds());
         Controls::Update();
         Graphics::Redraw();
     }

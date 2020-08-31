@@ -1,6 +1,6 @@
 #pragma once
 
-#include <engine/geometry/collision.hpp>
+#include <engine/collision/collision_engine.hpp>
 #include "object.hpp"
 
 class Constraint {
@@ -14,13 +14,13 @@ class CollisionConstraint : public Constraint {
 public:
     ~CollisionConstraint() override = default;
 
-    CollisionConstraint(PhysObject *a, PhysObject *b, Collision collision);
+    CollisionConstraint(std::shared_ptr<PhysObject> a, std::shared_ptr<PhysObject> b, Collision collision);
 
     void Solve() override;
 
 private:
-    PhysObject *a;
-    PhysObject *b;
+    std::shared_ptr<PhysObject> a;
+    std::shared_ptr<PhysObject> b;
 
     Vec3 GetRelativeVelocity() const;
 
@@ -48,14 +48,14 @@ class SpringConstraint: public Constraint {
 public:
     ~SpringConstraint() override = default;
 
-    SpringConstraint(PhysObject *a, PhysObject *b, Vec3 bind_a, Vec3 bind_b, double target_length, double stiffness = 1.0, double amortizing = 0.0);
+    SpringConstraint(std::shared_ptr<PhysObject> a, std::shared_ptr<PhysObject> b, Vec3 bind_a, Vec3 bind_b, double target_length, double stiffness = 1.0, double amortizing = 0.0);
 
     void Solve() override;
 
 private:
 
-    PhysObject *a;
-    PhysObject *b;
+    std::shared_ptr<PhysObject> a;
+    std::shared_ptr<PhysObject> b;
 
     Vec3 bind_a;
     Vec3 bind_b;
