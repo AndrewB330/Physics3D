@@ -1,5 +1,5 @@
 #pragma once
-#include <math/vec3.hpp>
+#include <common/math/vec3.hpp>
 
 struct Color {
     // for some glut APIs

@@ -1,5 +1,9 @@
 #include <engine/physics/object.hpp>
 
+Impulse operator+(const Impulse &lhs, const Impulse &rhs) {
+    return Impulse{lhs.linear_impulse + rhs.linear_impulse, lhs.angular_impulse + rhs.angular_impulse};
+}
+
 const Inertia &PhysObject::GetInertia() const {
     return inertia;
 }
@@ -9,32 +13,44 @@ const PhysMaterial &PhysObject::GetPhysMaterial() const {
 }
 
 void PhysObject::ApplyChanges(double dt) {
+    if (GetAccumulatedVelocity().Len() < 0.01 && GetAccumulatedAngularVelocity().Len() < 0.01) {
+        no_motion_ticks++;
+    } else {
+        no_motion_ticks = 0;
+    }
+    if (no_motion_ticks > 5) {
+        SetSleeping(true);
+    }
+
+    if (sleeping) {
+        delta_impulse = Impulse();
+        pseudo_impulse = Impulse();
+        return;
+    }
+
     if (!fixed) {
         impulse.linear_impulse += delta_impulse.linear_impulse;
         impulse.angular_impulse += delta_impulse.angular_impulse;
+        delta_impulse = Impulse();
     }
+    Translate(GetAccumulatedVelocity() * dt);
+    SetRotation(GetRotation() + (0.5 * GetAccumulatedAngularVelocity() * GetRotation()) * dt);
 
-    SetPosition(GetPosition() + GetVelocity() * dt);
-    SetRotation(GetRotation() + (0.5 * GetAngularVelocity() * GetRotation()) * dt);
-
-    delta_impulse = Impulse();
+    pseudo_impulse = Impulse();
 }
 
 void PhysObject::AddImpulse(Vec3 linear_impulse, Vec3 angular_impulse) {
-    if (!fixed) {
+    if (!fixed && !sleeping) {
         delta_impulse.linear_impulse += linear_impulse;
         delta_impulse.angular_impulse += angular_impulse;
     }
 }
 
-void PhysObject::SetPosition(Vec3 position) {
-    collider->SetTranslation(position);
-}
-
-void PhysObject::SetRotation(Quat rotation) {
-    collider->SetRotation(rotation);
-    const Mat3 &rot = collider->GetRotationMat();
-    inertia.moment_of_inertia_inv_global = rot * inertia.moment_of_inertia_inv * rot.T();
+void PhysObject::AddPseudoImpulse(Vec3 linear_impulse, Vec3 angular_impulse) {
+    if (!fixed && !sleeping) {
+        pseudo_impulse.linear_impulse += linear_impulse;
+        pseudo_impulse.angular_impulse += angular_impulse;
+    }
 }
 
 void PhysObject::SetFixed(bool val) {
@@ -42,12 +58,8 @@ void PhysObject::SetFixed(bool val) {
     RecalculateInertia();
 }
 
-const Vec3 &PhysObject::GetPosition() const {
-    return collider->GetTranslation();
-}
-
-const Quat &PhysObject::GetRotation() const {
-    return collider->GetRotation();
+void PhysObject::SetSleeping(bool val) {
+    sleeping = val;
 }
 
 void PhysObject::RecalculateInertia() {
@@ -55,7 +67,7 @@ void PhysObject::RecalculateInertia() {
         inertia = Inertia();
     } else {
         inertia = ComputeInertia(std::const_pointer_cast<const Collider>(collider), phys_material);
-        const Mat3 &rot = collider->GetRotationMat();
+        const Mat3 &rot = collider->GetRotation().Mat();
         inertia.moment_of_inertia_inv_global = rot * inertia.moment_of_inertia_inv * rot.T();
     }
 }
@@ -89,11 +101,12 @@ Vec3 PhysObject::GetAngularVelocity() const {
 }
 
 Vec3 PhysObject::GetAccumulatedVelocity() const {
-    return inertia.mass_inv * (impulse.linear_impulse + delta_impulse.linear_impulse);
+    auto acc_imp = impulse + delta_impulse + pseudo_impulse;
+    return inertia.mass_inv * acc_imp.linear_impulse;
 }
 
 Vec3 PhysObject::GetAccumulatedAngularVelocity() const {
-    return inertia.moment_of_inertia_inv_global * (impulse.angular_impulse + delta_impulse.angular_impulse);
+    return inertia.moment_of_inertia_inv_global * (impulse + delta_impulse + pseudo_impulse).angular_impulse;
 }
 
 PhysObject::PhysObject(std::shared_ptr<Collider> collider, const PhysMaterial &material, bool fixed)
@@ -103,6 +116,59 @@ PhysObject::PhysObject(std::shared_ptr<Collider> collider, const PhysMaterial &m
 
 std::shared_ptr<const Collider> PhysObject::GetCollider() const {
     return std::const_pointer_cast<const Collider>(collider);
+}
+
+void PhysObject::Scale(double scale) {
+    collider->Scale(scale);
+    // todo: update inertia?
+}
+
+void PhysObject::Rotate(const Quat &rotation) {
+    collider->Rotate(rotation);
+    Mat3 rot = GetRotation().Mat();
+    inertia.moment_of_inertia_inv_global = rot * inertia.moment_of_inertia_inv * rot.T();
+}
+
+void PhysObject::SetRotation(const Quat &rotation) {
+    collider->SetRotation(rotation);
+    Mat3 rot = GetRotation().Mat();
+    inertia.moment_of_inertia_inv_global = rot * inertia.moment_of_inertia_inv * rot.T();
+}
+
+double PhysObject::GetScale() const {
+    return collider->GetScale();
+}
+
+const Quat &PhysObject::GetRotation() const {
+    return collider->GetRotation();
+}
+
+const Vec3 &PhysObject::GetTranslation() const {
+    return collider->GetTranslation();
+}
+
+void PhysObject::SetTranslation(const Vec3 &translate) {
+    collider->SetTranslation(translate);
+}
+
+void PhysObject::SetScale(double scale) {
+    collider->SetScale(scale);
+}
+
+void PhysObject::Translate(const Vec3 &translate) {
+    collider->Translate(translate);
+}
+
+bool PhysObject::IsSleeping() const {
+    return sleeping;
+}
+
+int PhysObject::GetId() const {
+    return id;
+}
+
+void PhysObject::SetId(int id_) {
+    id = id_;
 }
 
 std::unique_ptr<PhysObject>

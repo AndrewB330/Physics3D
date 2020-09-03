@@ -40,3 +40,68 @@ std::vector<Vec3> GetBoxVertices(const BoundingBox &bbox) {
     }
     return vertices;
 }
+
+PhysicsEngine LoadSampleScene() {
+    PhysicsEngine world;
+    // Build Platform
+    double PLATFORM_SIZE = 16.0;
+    double BORDER_HEIGHT = 0.5;
+    double BORDER_WIDTH = 0.5;
+    Vec3 PLATFORM_POS = Vec3(0, -3, -2);
+    world.AddObject(std::make_unique<PhysObject>(
+            CreateBoxCollider(
+                    {PLATFORM_SIZE, 1, PLATFORM_SIZE},
+                    PLATFORM_POS
+            ),
+            PhysMaterial::STONE,
+            true
+    ));
+    world.AddObject(std::make_unique<PhysObject>(
+            CreateBoxCollider(
+                    {PLATFORM_SIZE, BORDER_HEIGHT, BORDER_WIDTH},
+                    PLATFORM_POS + Vec3(0, BORDER_HEIGHT * 0.5 + 0.5, (PLATFORM_SIZE + BORDER_WIDTH) * 0.5)
+            ),
+            PhysMaterial::STONE,
+            true
+    ));
+    world.AddObject(std::make_unique<PhysObject>(
+            CreateBoxCollider(
+                    {PLATFORM_SIZE, BORDER_HEIGHT, BORDER_WIDTH},
+                    PLATFORM_POS + Vec3(0, BORDER_HEIGHT * 0.5 + 0.5, -(PLATFORM_SIZE + BORDER_WIDTH) * 0.5)
+            ),
+            PhysMaterial::STONE,
+            true
+    ));
+    world.AddObject(std::make_unique<PhysObject>(
+            CreateBoxCollider(
+                    {BORDER_WIDTH, BORDER_HEIGHT, PLATFORM_SIZE},
+                    PLATFORM_POS + Vec3((PLATFORM_SIZE + BORDER_WIDTH) * 0.5, BORDER_HEIGHT * 0.5 + 0.5, 0)
+            ),
+            PhysMaterial::STONE,
+            true
+    ));
+    world.AddObject(std::make_unique<PhysObject>(
+            CreateBoxCollider(
+                    {BORDER_WIDTH, BORDER_HEIGHT, PLATFORM_SIZE},
+                    PLATFORM_POS + Vec3(-(PLATFORM_SIZE + BORDER_WIDTH) * 0.5, BORDER_HEIGHT * 0.5 + 0.5, 0)
+            ),
+            PhysMaterial::STONE,
+            true
+    ));
+
+    for(int i = 0; i <= 6; i++) {
+            for(int j = 0; j <= 12-i; j++) {
+                world.AddObject(std::make_unique<PhysObject>(
+                        CreateBoxCollider(
+                                1.0,
+                                PLATFORM_POS + Vec3(i*0.6 + j * 1.2 - 7, i, 0.0)
+                        ),
+                        PhysMaterial::WOOD,
+                        false
+                ));
+            }
+    }
+
+    world.SetGravity(Vec3(0, -9, 0));
+    return world;
+}

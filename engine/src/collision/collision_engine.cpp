@@ -123,7 +123,7 @@ std::optional<Collision> CollisionEngine::GetCollision(int a_id, int b_id) const
             float delta = Dot(v[4].v - v[3].v, n);
             float depth = -Dot(n, v[4].v);
 
-            if (delta <= 0.001f || depth >= 0 || pass > 10) {
+            if (delta <= 0.001f || depth >= 0 || pass > 30) {
                 if (!hit) {
                     return std::nullopt;
                 }

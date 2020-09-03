@@ -8,7 +8,7 @@ namespace Controls {
 
     void Init();
 
-    void Update();
+    void Update(double dt);
 
     void LoadTransform();
 

@@ -2,29 +2,28 @@
 
 set(
         HEADERS
-        include/engine/world.hpp
+        include/engine/physics/physics_engine.hpp
         include/engine/physics/object.hpp
         include/engine/physics/material.hpp
         include/engine/physics/inertia.hpp
         include/engine/utils.hpp
-        include/engine/timer.hpp
-        include/engine/geometry/transform.hpp
-        include/engine/physics/constraints.hpp include/engine/collision/collision_engine.hpp include/engine/collision/bounding_volume.hpp include/engine/collision/tree.hpp include/engine/physics/arbiter.hpp)
+        ../common/include/common/timer.hpp
+        include/engine/collision/collision_engine.hpp include/engine/collision/bounding_volume.hpp include/engine/collision/tree.hpp include/engine/collision/shape.hpp include/engine/physics/constraint.hpp)
 
 set(
         SOURCES
         src/collision/bounding_volume.cpp
         src/physics/material.cpp
         src/physics/object.cpp
-        src/world.cpp
-        src/timer.cpp
+        src/physics/physics_engine.cpp
+        ../common/src/timer.cpp
         src/utils.cpp
         src/physics/inertia.cpp
-        src/geometry/transform.cpp include/engine/assert.hpp src/physics/constraint.cpp include/engine/collision/collider.hpp src/collision/collider.cpp src/collision/collision_engine.cpp src/collision/tree.cpp src/physics/arbiter.cpp)
+        ../common/include/common/assert.hpp include/engine/collision/collider.hpp src/collision/collider.cpp src/collision/collision_engine.cpp src/collision/tree.cpp src/collision/shape.cpp src/physics/constraint.cpp include/engine/physics/arbiter.hpp src/physics/arbiter.cpp)
 
 add_library(engine ${HEADERS} ${SOURCES})
 target_include_directories(engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_link_libraries(engine PUBLIC math)
+target_link_libraries(engine PUBLIC common)
 
 # TESTS
 

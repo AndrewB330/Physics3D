@@ -1,62 +1,12 @@
 #pragma once
 
-#include <math/vec3.hpp>
 #include <memory>
-#include <engine/geometry/transform.hpp>
+#include <common/math/quat.hpp>
+#include <common/transformable.hpp>
 #include "bounding_volume.hpp"
+#include "shape.hpp"
 
-class Shape {
-public:
-    virtual ~Shape() = default;
-};
-
-class ConvexShape : public Shape {
-public:
-    ~ConvexShape() override = default;
-
-    virtual Vec3 GetSupportingVector(const Vec3 &dir) const;
-};
-
-class SphereShape : public ConvexShape {
-public:
-    ~SphereShape() override = default;
-
-    SphereShape(double radius);
-
-    Vec3 GetSupportingVector(const Vec3 &dir) const override;
-
-private:
-    double radius;
-};
-
-class BoxShape : public ConvexShape {
-public:
-    ~BoxShape() override = default;
-
-    BoxShape(double width, double height, double depth);
-
-    explicit BoxShape(double size);
-
-    Vec3 GetSupportingVector(const Vec3 &dir) const override;
-
-private:
-    Vec3 half_size;
-};
-
-class SumShape : public ConvexShape {
-public:
-    ~SumShape() override = default;
-
-    SumShape(std::unique_ptr<ConvexShape> a, std::unique_ptr<ConvexShape> b);
-
-    Vec3 GetSupportingVector(const Vec3 &dir) const override;
-
-private:
-    std::unique_ptr<ConvexShape> a;
-    std::unique_ptr<ConvexShape> b;
-};
-
-class Collider : public ConvexShape, public Transform {
+class Collider : public ConvexShape, public Transformable {
 public:
     ~Collider() override = default;
 
@@ -66,15 +16,37 @@ public:
 
     const BoundingBox &GetBBox() const;
 
-    // TODO: DEPERECATED!
+    const Vec3 &GetTranslation() const override;
+
+    const Quat &GetRotation() const override;
+
+    double GetScale() const override;
+
+    void SetTranslation(const Vec3 &translation) override;
+
+    void SetRotation(const Quat &rotation) override;
+
+    void SetScale(double scale) override;
+
+    void Translate(const Vec3 &translation) override;
+
+    void Rotate(const Quat &rotation) override;
+
+    void Scale(double scale) override;
+
+    // TODO: DEPRECATED!
     const ConvexShape* GetOrigShape() const;
 
 private:
-    void TransformUpdated() override;
+
+    void TransformUpdated();
 
     std::unique_ptr<ConvexShape> shape;
 
     BoundingBox bbox;
+
+    Vec3 translation;
+    Quat rotation;
 };
 
 std::unique_ptr<Collider> CreateBoxCollider(double size, Vec3 pos = Vec3(), Quat rot = Quat::Identity());

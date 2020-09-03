@@ -1,5 +1,5 @@
 #pragma once
-#include <math/rand.hpp>
+#include <common/math/rand.hpp>
 
 struct PhysMaterial {
 public:

@@ -3,8 +3,9 @@
 #include <functional>
 #include <GL/freeglut.h>
 
-#include <math/vec3.hpp>
+#include <common/math/vec3.hpp>
 #include <viewer/controls.hpp>
+#include <cmath>
 
 namespace Controls {
 
@@ -20,8 +21,8 @@ namespace Controls {
         Vec3 forward = Vec3(-cos(angle_y) * sin(angle_x), sin(angle_y), -cos(angle_y) * cos(angle_x));
         Vec3 up = Vec3(0, 1, 0);
 
-        const double acceleration = 1.5;
-        double velocity_fade_factor = 0.95;
+        const double acceleration = 30.5;
+        double velocity_fade_factor = 0.1;
 
         bool cursor = true;
     } camera;
@@ -98,8 +99,8 @@ namespace Controls {
         }
     }
 
-    void Update() {
-        double mult = camera.acceleration * DEFAULT_DT;
+    void Update(double dt) {
+        double mult = camera.acceleration * dt;
         if (IsKeyPressed('w') || IsKeyPressed('W')) {
             camera.velocity += camera.forward.Norm() * mult;
         }
@@ -118,9 +119,9 @@ namespace Controls {
         if (IsKeyPressed(' ')) {
             camera.velocity += camera.up * mult;
         }
-        camera.velocity *= camera.velocity_fade_factor;
+        camera.velocity *= pow(camera.velocity_fade_factor, dt);
 
-        camera.position += camera.velocity * DEFAULT_DT;
+        camera.position += camera.velocity * dt;
 
         if (camera.cursor) {
             glutSetCursor(GLUT_CURSOR_INHERIT);
@@ -135,8 +136,8 @@ namespace Controls {
             int dy = Graphics::GetHeight() / 2 - y;
             double ax = camera.angle_x += dx / 500.0;
             double ay = camera.angle_y += dy / 500.0;
-            if (ay > 1.57) ay = 1.57;
-            if (ay < -1.57) ay = -1.57;
+            if (ay > 1.57) camera.angle_x = ay = 1.57;
+            if (ay < -1.57) camera.angle_y = ay = -1.57;
             camera.forward = Vec3(-cos(ay) * sin(ax), sin(ay), -cos(ay) * cos(ax));
             glutWarpPointer(Graphics::GetWidth() / 2, Graphics::GetHeight() / 2);
         }

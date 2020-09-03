@@ -1,109 +1,163 @@
-#include <engine/physics/constraints.hpp>
-#include <algorithm>
+#include <engine/physics/constraint.hpp>
+#include <common/assert.hpp>
 
-const double PENETRATION_K = 5.0;
-
-CollisionConstraint::CollisionConstraint(std::shared_ptr<PhysObject> a_, std::shared_ptr<PhysObject> b_,
-                                         Collision collision)
-        : a(std::move(a_)), b(std::move(b_)), penetration(collision.penetration), normal(collision.normal) {
-
-    lever_a = collision.point_a - a->GetPosition();
-    lever_b = collision.point_b - b->GetPosition();
-
-    Vec3 angular_mass_a = a->GetInertia().moment_of_inertia_inv_global * Cross(lever_a, normal);
-    Vec3 angular_mass_b = b->GetInertia().moment_of_inertia_inv_global * Cross(lever_b, normal);
-
-    effective_mass = 1.0 / (a->GetInertia().mass_inv + Dot(Cross(angular_mass_a, lever_a), normal) +
-                            b->GetInertia().mass_inv + Dot(Cross(angular_mass_b, lever_b), normal));
-
-
-    Vec3 relative_velocity = GetRelativeVelocity();
-
-    tangent_normal = relative_velocity - normal * Dot(relative_velocity, normal);
-
-    if (tangent_normal.Len() > 1e-9) {
-        tangent_normal_found = true;
-        tangent_normal = tangent_normal.Norm();
-
-        Vec3 tangent_angular_mass_inv_a = a->GetInertia().moment_of_inertia_inv_global * Cross(lever_a, tangent_normal);
-        Vec3 tangent_angular_mass_inv_b = b->GetInertia().moment_of_inertia_inv_global * Cross(lever_b, tangent_normal);
-
-        tangent_effective_mass =
-                1.0 / (a->GetInertia().mass_inv + Dot(Cross(tangent_angular_mass_inv_a, lever_a), tangent_normal) +
-                       b->GetInertia().mass_inv + Dot(Cross(tangent_angular_mass_inv_b, lever_b), tangent_normal));
-    } else {
-        tangent_normal_found = false;
-    }
-
-    // Combined Bounciness
-    double bounciness = CombineBounciness(a->GetPhysMaterial().GetBounciness(), b->GetPhysMaterial().GetBounciness());
-    resulting_velocity = GetRelativeVelocity() * bounciness;
-    // Combined Friction
-    friction = CombineFriction(a->GetPhysMaterial().GetFriction(), b->GetPhysMaterial().GetFriction());
+Constraint::Constraint(PhysObjectPtr a, PhysObjectPtr b) : a(std::move(a)), b(std::move(b)) {
 }
 
-void CollisionConstraint::Solve() {
-    if (a->IsFixed() && b->IsFixed()) {
+ContactConstraint::ContactConstraint(PhysObjectPtr a, PhysObjectPtr b, ContactPoint point)
+        : Constraint(a, b), local_lever_a(point.local_lever_a), local_lever_b(point.local_lever_b),
+          normal(point.normal) {
+    friction_factor = CombineFriction(a->GetPhysMaterial().GetFriction(), b->GetPhysMaterial().GetFriction());
+    initial_point_a = a->GetTranslation() + a->GetRotation().ApplyRotation(local_lever_a);
+    initial_point_b = b->GetTranslation() + b->GetRotation().ApplyRotation(local_lever_b);
+}
+
+void ContactConstraint::Init() {
+    accumulated_lambda = 0.0;
+    accumulated_lambda_p = 0.0;
+    accumulated_lambda_q = 0.0;
+    accumulated_lambda_pseudo = 0.0;
+
+    lever_a = a->GetRotation().ApplyRotation(local_lever_a);
+    lever_b = b->GetRotation().ApplyRotation(local_lever_b);
+    point_a = a->GetTranslation() + lever_a;
+    point_b = b->GetTranslation() + lever_b;
+    penetration = Dot(point_b - point_a, normal);
+
+    if (normal_p.LenSqr() > 1e-3) {
+        normal_q = Cross(normal, normal_p).Norm();
+        normal_p = Cross(normal_q, normal).Norm();
+    } else {
+        Vec3 random_vec = Vec3::RandomUnit();
+        while (fabs(Cross(random_vec, normal).LenSqr()) < 1e-4) {
+            random_vec = Vec3::RandomUnit();
+        }
+        normal_p = Cross(normal, random_vec).Norm();
+        normal_q = Cross(normal, normal_p).Norm();
+    }
+
+    // Ensure that normals are perpendicular to each other
+    ENSURE_THAT_BETWEEN(normal.Len(), 1.0 - 1e-3, 1.0 + 1e-3)
+    ENSURE_THAT_BETWEEN(normal_p.Len(), 1.0 - 1e-3, 1.0 + 1e-3)
+    ENSURE_THAT_BETWEEN(normal_q.Len(), 1.0 - 1e-3, 1.0 + 1e-3)
+    ENSURE_THAT_BETWEEN(Dot(normal, normal_q), -1e-3, +1e-3)
+    ENSURE_THAT_BETWEEN(Dot(normal, normal_p), -1e-3, +1e-3)
+    ENSURE_THAT_BETWEEN(Dot(normal_p, normal_q), -1e-3, +1e-3)
+
+    effective_mass = GetEffectiveMass(normal);
+    effective_mass_p = GetEffectiveMass(normal_p);
+    effective_mass_q = GetEffectiveMass(normal_q);
+}
+
+double ContactConstraint::GetEffectiveMass(const Vec3 &norm) const {
+    return 1.0 / (
+            a->GetInertia().mass_inv +
+            b->GetInertia().mass_inv +
+            Dot(Cross(a->GetInertia().moment_of_inertia_inv_global * Cross(lever_a, norm), lever_a), norm) +
+            Dot(Cross(b->GetInertia().moment_of_inertia_inv_global * Cross(lever_b, norm), lever_b), norm)
+    );
+}
+
+bool ContactConstraint::IsResolved() const {
+    // if there is no penetration anymore or point of contact has shifted
+    // todo: magic constant
+    return penetration < -1e-2 ||
+           Dist(initial_point_a, point_a) > 0.05 ||
+           Dist(initial_point_b, point_b) > 0.05 ||
+           Dist(point_a, point_b) > fabs(4.0 * penetration) + ALLOWED_PENETRATION;
+}
+
+void ContactConstraint::Solve(int phase) {
+    if (phase > 0) {
+        SolvePseudoPhase();
         return;
     }
 
-    Vec3 relative_velocity = GetRelativeVelocity();
+    if (penetration < 0.0) {
+        return;
+    }
 
-    double lambda =
-            (Dot(relative_velocity + resulting_velocity, normal) + penetration * PENETRATION_K) * effective_mass;
+    Vec3 point_velocity_a = a->GetAccumulatedVelocity() + Cross(a->GetAccumulatedAngularVelocity(), lever_a);
+    Vec3 point_velocity_b = b->GetAccumulatedVelocity() + Cross(b->GetAccumulatedAngularVelocity(), lever_b);
+    Vec3 rel_velocity = point_velocity_b - point_velocity_a;
+
+    double lambda = Dot(rel_velocity, normal) * effective_mass;
 
     accumulated_lambda += lambda;
     if (accumulated_lambda < 0.0) {
+        lambda -= accumulated_lambda;
         accumulated_lambda = 0.0;
-        lambda = 0.0;
     }
 
     a->AddImpulse(+lambda * normal, +lambda * Cross(lever_a, normal));
     b->AddImpulse(-lambda * normal, -lambda * Cross(lever_b, normal));
 
-    if (tangent_normal_found) {
-        double tangentLambda = Dot(relative_velocity, tangent_normal) * tangent_effective_mass;
-        tangentLambda = std::min(tangentLambda, lambda * friction);
+    // Friction
+    // todo: make friction_lambda to be Vec2 (not separate variables)
+    double lambda_p = Dot(rel_velocity, normal_p) * effective_mass_p;
+    double lambda_q = Dot(rel_velocity, normal_q) * effective_mass_q;
 
-        a->AddImpulse(+tangentLambda * tangent_normal, +tangentLambda * Cross(lever_a, tangent_normal));
-        b->AddImpulse(-tangentLambda * tangent_normal, -tangentLambda * Cross(lever_b, tangent_normal));
+    // todo: change to Vec2
+    Vec3 prev_friction = Vec3(accumulated_lambda_p, accumulated_lambda_q, 0);
+    Vec3 cur_friction = Vec3(accumulated_lambda_p + lambda_p, accumulated_lambda_q + lambda_q, 0);
+    double cur_friction_len = cur_friction.Len();
+    if (cur_friction_len > accumulated_lambda * friction_factor) {
+        cur_friction = (cur_friction / cur_friction_len) * accumulated_lambda * friction_factor;
     }
+    Vec3 delta_friction = cur_friction - prev_friction;
+    lambda_p = delta_friction.x;
+    lambda_q = delta_friction.y;
+    accumulated_lambda_p += lambda_p;
+    accumulated_lambda_q += lambda_q;
+
+    a->AddImpulse(+lambda_p * normal_p, +lambda_p * Cross(lever_a, normal_p));
+    b->AddImpulse(-lambda_p * normal_p, -lambda_p * Cross(lever_b, normal_p));
+
+    a->AddImpulse(+lambda_q * normal_q, +lambda_q * Cross(lever_a, normal_q));
+    b->AddImpulse(-lambda_q * normal_q, -lambda_q * Cross(lever_b, normal_q));
 }
 
-Vec3 CollisionConstraint::GetRelativeVelocity() const {
-    Vec3 point_velocity_a = a->GetAccumulatedVelocity() + Cross(a->GetAccumulatedAngularVelocity(), lever_a);
-    Vec3 point_velocity_b = b->GetAccumulatedVelocity() + Cross(b->GetAccumulatedAngularVelocity(), lever_b);
-    return point_velocity_b - point_velocity_a;
-}
-
-SpringConstraint::SpringConstraint(std::shared_ptr<PhysObject> a, std::shared_ptr<PhysObject> b, Vec3 bind_a,
-                                   Vec3 bind_b, double target_length,
-                                   double stiffness, double amortizing)
-        : a(std::move(a)), b(std::move(b)), target_length(target_length), stiffness(stiffness), amortizing(amortizing),
-          bind_a(bind_a),
-          bind_b(bind_b) {
-
-}
-
-void SpringConstraint::Solve() {
-    if (a->IsFixed() && b->IsFixed()) {
+void ContactConstraint::SolvePseudoPhase() {
+    if (penetration < ALLOWED_PENETRATION) {
         return;
     }
-    // todo: make correct formula
-
-    Vec3 lever_a = a->GetRotation().Mat() * bind_a;
-    Vec3 lever_b = b->GetRotation().Mat() * bind_b;
-
-    Vec3 v = (a->GetPosition() + lever_a - b->GetPosition() - lever_b);
-    Vec3 direction = v.Norm();
-    double length_diff = target_length - v.Len();
 
     Vec3 point_velocity_a = a->GetAccumulatedVelocity() + Cross(a->GetAccumulatedAngularVelocity(), lever_a);
     Vec3 point_velocity_b = b->GetAccumulatedVelocity() + Cross(b->GetAccumulatedAngularVelocity(), lever_b);
-    Vec3 relative_velocity = point_velocity_b - point_velocity_a;
+    Vec3 rel_velocity = point_velocity_b - point_velocity_a;
 
-    double lambda = ((Dot(relative_velocity, direction)) + stiffness * length_diff);
+    double lambda_pseudo = (Dot(rel_velocity, normal) + (penetration - ALLOWED_PENETRATION) * 2.0) * effective_mass;
 
-    a->AddImpulse(+lambda * direction, +lambda * Cross(lever_a, direction));
-    b->AddImpulse(-lambda * direction, -lambda * Cross(lever_b, direction));
+    accumulated_lambda_pseudo += lambda_pseudo;
+    if (accumulated_lambda_pseudo < 0.0) {
+        lambda_pseudo -= accumulated_lambda_pseudo;
+        accumulated_lambda_pseudo = 0.0;
+    }
+
+    a->AddPseudoImpulse(+lambda_pseudo * normal, +lambda_pseudo * Cross(lever_a, normal));
+    b->AddPseudoImpulse(-lambda_pseudo * normal, -lambda_pseudo * Cross(lever_b, normal));
+}
+
+bool ContactConstraint::UpdateIfTheSame(ContactPoint contact) {
+    /**
+     * Here are some magic constants.
+     * CONTACT_RADIUS - if any new contact is registered within this radius it will be considered as "almost the same"
+     * NORMAL_THRESHOLD - the maximum cosine value between two normals to be considered "almost the same"
+     */
+    const double CONTACT_RADIUS = 0.09;
+    const double NORMAL_THRESHOLD = 0.95;
+    if (Dist(local_lever_a, contact.local_lever_a) > CONTACT_RADIUS ||
+        Dist(local_lever_b, contact.local_lever_b) > CONTACT_RADIUS ||
+        Dot(normal, contact.normal) < NORMAL_THRESHOLD) {
+        return false;
+    }
+    /**
+     * New contact was too close to the current one -> update current contact with parameters from a new contact
+     */
+    normal = contact.normal;
+    local_lever_a = contact.local_lever_a;
+    local_lever_b = contact.local_lever_b;
+    initial_point_a = a->GetTranslation() + a->GetRotation().ApplyRotation(local_lever_a);
+    initial_point_b = b->GetTranslation() + b->GetRotation().ApplyRotation(local_lever_b);
+    return true;
 }
