@@ -82,19 +82,13 @@ public:
 
     const Quat &GetRotation() const override;
 
-    double GetScale() const override;
-
     void SetTranslation(const Vec3& translate) override;
 
     void SetRotation(const Quat& rotation) override;
 
-    void SetScale(double scale) override;
-
     void Translate(const Vec3& translate) override;
 
     void Rotate(const Quat& rotation) override;
-
-    void Scale(double scale) override;
 
 protected:
 

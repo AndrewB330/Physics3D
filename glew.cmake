@@ -1,0 +1,13 @@
+message("Installing GLEW...")
+set(GlewPath "lib/glew-2.1.0")
+set(GLEW_INCLUDE_DIRS "${GlewPath}/include")
+set(GLEW_LIBRARIES glew32.lib)
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(GLEW_LIBRARY_DIRS "${GlewPath}/lib/Release/x64")
+else()
+    set(GLEW_LIBRARY_DIRS "${GlewPath}/lib/Release/Win32")
+endif()
+
+include_directories(${GLEW_INCLUDE_DIRS})
+link_directories(${GLEW_LIBRARY_DIRS})
+link_libraries(${GLEW_LIBRARIES})

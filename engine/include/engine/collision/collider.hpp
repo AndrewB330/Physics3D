@@ -1,12 +1,12 @@
 #pragma once
 
 #include <memory>
-#include <common/math/quat.hpp>
-#include <common/transformable.hpp>
+#include <math/quat.hpp>
+#include <common/transform.hpp>
 #include "bounding_volume.hpp"
 #include "shape.hpp"
 
-class Collider : public ConvexShape, public Transformable {
+class Collider : public ConvexShape, public Transform {
 public:
     ~Collider() override = default;
 
@@ -16,37 +16,16 @@ public:
 
     const BoundingBox &GetBBox() const;
 
-    const Vec3 &GetTranslation() const override;
-
-    const Quat &GetRotation() const override;
-
-    double GetScale() const override;
-
-    void SetTranslation(const Vec3 &translation) override;
-
-    void SetRotation(const Quat &rotation) override;
-
-    void SetScale(double scale) override;
-
-    void Translate(const Vec3 &translation) override;
-
-    void Rotate(const Quat &rotation) override;
-
-    void Scale(double scale) override;
-
     // TODO: DEPRECATED!
     const ConvexShape* GetOrigShape() const;
 
 private:
 
-    void TransformUpdated();
+    void TransformUpdated() override;
 
     std::unique_ptr<ConvexShape> shape;
 
     BoundingBox bbox;
-
-    Vec3 translation;
-    Quat rotation;
 };
 
 std::unique_ptr<Collider> CreateBoxCollider(double size, Vec3 pos = Vec3(), Quat rot = Quat::Identity());

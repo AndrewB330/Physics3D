@@ -27,46 +27,6 @@ const ConvexShape *Collider::GetOrigShape() const {
     return shape.get();
 }
 
-const Vec3 &Collider::GetTranslation() const {
-    return translation;
-}
-
-const Quat &Collider::GetRotation() const {
-    return rotation;
-}
-
-double Collider::GetScale() const {
-    return 1.0;
-}
-
-void Collider::SetTranslation(const Vec3 &translation_) {
-    translation = translation_;
-    TransformUpdated();
-}
-
-void Collider::SetRotation(const Quat &rotation_) {
-    rotation = rotation_.Norm();
-    TransformUpdated();
-}
-
-void Collider::SetScale(double scale) {
-    TransformUpdated();
-}
-
-void Collider::Translate(const Vec3 &translation_) {
-    translation += translation_;
-    TransformUpdated();
-}
-
-void Collider::Rotate(const Quat &rotation_) {
-    rotation *= rotation_.Norm();
-    TransformUpdated();
-}
-
-void Collider::Scale(double scale) {
-    TransformUpdated();
-}
-
 std::unique_ptr<Collider> CreateBoxCollider(double size, Vec3 pos, Quat rot) {
     auto shape = std::make_unique<BoxShape>(size);
     auto collider = std::make_unique<Collider>(std::move(shape));

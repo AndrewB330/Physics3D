@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include <common/math/vec3.hpp>
+#include <math/vec3.hpp>
 
 class Shape {
 public:

@@ -118,11 +118,6 @@ std::shared_ptr<const Collider> PhysObject::GetCollider() const {
     return std::const_pointer_cast<const Collider>(collider);
 }
 
-void PhysObject::Scale(double scale) {
-    collider->Scale(scale);
-    // todo: update inertia?
-}
-
 void PhysObject::Rotate(const Quat &rotation) {
     collider->Rotate(rotation);
     Mat3 rot = GetRotation().Mat();
@@ -135,10 +130,6 @@ void PhysObject::SetRotation(const Quat &rotation) {
     inertia.moment_of_inertia_inv_global = rot * inertia.moment_of_inertia_inv * rot.T();
 }
 
-double PhysObject::GetScale() const {
-    return collider->GetScale();
-}
-
 const Quat &PhysObject::GetRotation() const {
     return collider->GetRotation();
 }
@@ -149,10 +140,6 @@ const Vec3 &PhysObject::GetTranslation() const {
 
 void PhysObject::SetTranslation(const Vec3 &translate) {
     collider->SetTranslation(translate);
-}
-
-void PhysObject::SetScale(double scale) {
-    collider->SetScale(scale);
 }
 
 void PhysObject::Translate(const Vec3 &translate) {

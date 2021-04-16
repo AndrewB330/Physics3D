@@ -1,6 +1,6 @@
 #pragma once
 
-#include <common/math/vec3.hpp>
+#include <math/vec3.hpp>
 #include <limits>
 
 const double LOWEST = std::numeric_limits<double>::lowest();

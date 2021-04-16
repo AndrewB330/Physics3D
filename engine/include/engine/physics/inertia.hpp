@@ -1,4 +1,4 @@
-#include <common/math/mat3.hpp>
+#include <math/mat3.hpp>
 #include <memory>
 #include <engine/collision/collider.hpp>
 #include "material.hpp"

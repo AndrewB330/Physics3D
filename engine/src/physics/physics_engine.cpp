@@ -98,6 +98,7 @@ void PhysicsEngine::SolveConstraints() {
             arbiter.Solve(0);
         }
     }
+
     for (int iter = 0; iter < SOLVER_LOOPS_PER_TICK; iter++) {
         for (auto &[_, arbiter] : arbiters) {
             arbiter.Solve(1);
