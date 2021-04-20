@@ -69,33 +69,57 @@ void Pipeline::CreatePrograms() {
     CompileAndAttachShader(main_p, "main_frag.glsl", GL_FRAGMENT_SHADER);
     glLinkProgram(main_p);
 
-    main_projectionMat_u_inp = glGetUniformLocation(main_p, "projectionMat_u");
-    if (main_projectionMat_u_inp == -1) 
-        Logger::LogError("Uniform location \"projectionMat_u\" not found");
+    main_dataTexture_inp = glGetUniformLocation(main_p, "dataTexture");
+    if (main_dataTexture_inp == -1) 
+        Logger::LogError("Uniform location \"dataTexture\" not found");
 
-    main_modelViewMat_u_inp = glGetUniformLocation(main_p, "modelViewMat_u");
-    if (main_modelViewMat_u_inp == -1) 
-        Logger::LogError("Uniform location \"modelViewMat_u\" not found");
+    main_currentObject_dims_inp = glGetUniformLocation(main_p, "currentObject.dims");
+    if (main_currentObject_dims_inp == -1) 
+        Logger::LogError("Uniform location \"currentObject.dims\" not found");
 
-    main_gridDims_u_inp = glGetUniformLocation(main_p, "gridDims_u");
-    if (main_gridDims_u_inp == -1) 
-        Logger::LogError("Uniform location \"gridDims_u\" not found");
+    main_currentObject_maxLod_inp = glGetUniformLocation(main_p, "currentObject.maxLod");
+    if (main_currentObject_maxLod_inp == -1) 
+        Logger::LogError("Uniform location \"currentObject.maxLod\" not found");
 
-    main_voxels_u_inp = glGetUniformLocation(main_p, "voxels_u");
-    if (main_voxels_u_inp == -1) 
-        Logger::LogError("Uniform location \"voxels_u\" not found");
+    main_currentObject_voxelSize_inp = glGetUniformLocation(main_p, "currentObject.voxelSize");
+    if (main_currentObject_voxelSize_inp == -1) 
+        Logger::LogError("Uniform location \"currentObject.voxelSize\" not found");
 
-    main_maxLod_u_inp = glGetUniformLocation(main_p, "maxLod_u");
-    if (main_maxLod_u_inp == -1) 
-        Logger::LogError("Uniform location \"maxLod_u\" not found");
+    main_currentObject_lodOffsets_inp = glGetUniformLocation(main_p, "currentObject.lodOffsets[0]");
+    if (main_currentObject_lodOffsets_inp == -1) 
+        Logger::LogError("Uniform location \"currentObject.lodOffsets\" not found");
 
-    main_voxelSize_u_inp = glGetUniformLocation(main_p, "voxelSize_u");
-    if (main_voxelSize_u_inp == -1) 
-        Logger::LogError("Uniform location \"voxelSize_u\" not found");
+    main_currentObject_dataOffset_inp = glGetUniformLocation(main_p, "currentObject.dataOffset");
+    if (main_currentObject_dataOffset_inp == -1) 
+        Logger::LogError("Uniform location \"currentObject.dataOffset\" not found");
 
-    main_textureOffsets_u_inp = glGetUniformLocation(main_p, "textureOffsets_u[0]");
-    if (main_textureOffsets_u_inp == -1) 
-        Logger::LogError("Uniform location \"textureOffsets_u\" not found");
+    main_currentObject_transform_inp = glGetUniformLocation(main_p, "currentObject.transform");
+    if (main_currentObject_transform_inp == -1) 
+        Logger::LogError("Uniform location \"currentObject.transform\" not found");
+
+    main_globalShadow_dims_inp = glGetUniformLocation(main_p, "globalShadow.dims");
+    if (main_globalShadow_dims_inp == -1) 
+        Logger::LogError("Uniform location \"globalShadow.dims\" not found");
+
+    main_globalShadow_maxLod_inp = glGetUniformLocation(main_p, "globalShadow.maxLod");
+    if (main_globalShadow_maxLod_inp == -1) 
+        Logger::LogError("Uniform location \"globalShadow.maxLod\" not found");
+
+    main_globalShadow_voxelSize_inp = glGetUniformLocation(main_p, "globalShadow.voxelSize");
+    if (main_globalShadow_voxelSize_inp == -1) 
+        Logger::LogError("Uniform location \"globalShadow.voxelSize\" not found");
+
+    main_globalShadow_lodOffsets_inp = glGetUniformLocation(main_p, "globalShadow.lodOffsets[0]");
+    if (main_globalShadow_lodOffsets_inp == -1) 
+        Logger::LogError("Uniform location \"globalShadow.lodOffsets\" not found");
+
+    main_globalShadow_transformInv_inp = glGetUniformLocation(main_p, "globalShadow.transformInv");
+    if (main_globalShadow_transformInv_inp == -1) 
+        Logger::LogError("Uniform location \"globalShadow.transformInv\" not found");
+
+    main_index_inp = glGetUniformLocation(main_p, "index");
+    if (main_index_inp == -1) 
+        Logger::LogError("Uniform location \"index\" not found");
 }
 
 void Pipeline::DestroyFrameBuffers() {
@@ -142,27 +166,15 @@ void Pipeline::UniformMat4(GLint location, const Mat4 &mat) {
     for(int i = 0; i < 16; i++) data[i] = *(*mat.val + i);
     glUniformMatrix4fv(location, 1, GL_TRUE, data);
 }
-
-void Pipeline::UniformProjection(GLint location) {
-    GLfloat data[16];
-    glGetFloatv(GL_PROJECTION_MATRIX, data);
-    glUniformMatrix4fv(location, 1, GL_FALSE, data);
-}
-
-void Pipeline::UniformModelView(GLint location) {
-    GLfloat data[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, data);
-    glUniformMatrix4fv(location, 1, GL_FALSE, data);
-}
-
-void Pipeline::UniformCameraTranslation(GLint location) {
-    Vec3 v = camera_translation.Get();
-    glUniform3f(location, v.x, v.y, v.z);
-}void Pipeline::SetMainFunc(std::function<void(void)> func) { main_func = std::move(func); }
-void Pipeline::UpdateUniformMainProjectionMatU(){ UniformProjection(main_projectionMat_u_inp); }
-void Pipeline::UpdateUniformMainModelViewMatU(){ UniformModelView(main_modelViewMat_u_inp); }
-void Pipeline::UpdateUniformMainGridDimsU(const Vec3i & value){glUniform3i(main_gridDims_u_inp, value.x, value.y, value.z);}
-void Pipeline::UpdateUniformMainVoxelsU(const int & value){ glUniform1i(main_voxels_u_inp, value);}
-void Pipeline::UpdateUniformMainMaxLodU(const int & value){ glUniform1i(main_maxLod_u_inp, value);}
-void Pipeline::UpdateUniformMainVoxelSizeU(const float & value){glUniform1f(main_voxelSize_u_inp, value);}
-void Pipeline::UpdateUniformMainTextureOffsetsU(const std::vector<Vec3i> & value){for (int i = 0; i < value.size(); i++)glUniform3i(main_textureOffsets_u_inp + i, value[i].x, value[i].y, value[i].z);}
+void Pipeline::SetMainFunc(std::function<void(void)> func) { main_func = std::move(func); }
+void Pipeline::SetMainDataTexture(const int & value){ glUniform1i(main_dataTexture_inp, value);}
+void Pipeline::SetMainCurrentObjectDims(const Vec3i & value){glUniform3i(main_currentObject_dims_inp, value.x, value.y, value.z);}
+void Pipeline::SetMainCurrentObjectMaxLod(const int & value){ glUniform1i(main_currentObject_maxLod_inp, value);}
+void Pipeline::SetMainCurrentObjectVoxelSize(const float & value){glUniform1f(main_currentObject_voxelSize_inp, value);}
+void Pipeline::SetMainCurrentObjectLodOffsets(const std::vector<Vec3i> & value){for (int i = 0; i < value.size(); i++)glUniform3i(main_currentObject_lodOffsets_inp + i, value[i].x, value[i].y, value[i].z);}void Pipeline::SetMainCurrentObjectDataOffset(const Vec3i & value){glUniform3i(main_currentObject_dataOffset_inp, value.x, value.y, value.z);}
+void Pipeline::SetMainCurrentObjectTransform(const Mat4 & value){UniformMat4(main_currentObject_transform_inp, value);}
+void Pipeline::SetMainGlobalShadowDims(const Vec3i & value){glUniform3i(main_globalShadow_dims_inp, value.x, value.y, value.z);}
+void Pipeline::SetMainGlobalShadowMaxLod(const int & value){ glUniform1i(main_globalShadow_maxLod_inp, value);}
+void Pipeline::SetMainGlobalShadowVoxelSize(const float & value){glUniform1f(main_globalShadow_voxelSize_inp, value);}
+void Pipeline::SetMainGlobalShadowLodOffsets(const std::vector<Vec3i> & value){for (int i = 0; i < value.size(); i++)glUniform3i(main_globalShadow_lodOffsets_inp + i, value[i].x, value[i].y, value[i].z);}void Pipeline::SetMainGlobalShadowTransformInv(const Mat4 & value){UniformMat4(main_globalShadow_transformInv_inp, value);}
+void Pipeline::SetMainIndex(const int & value){ glUniform1i(main_index_inp, value);}

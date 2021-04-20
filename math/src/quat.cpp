@@ -84,3 +84,7 @@ Quat operator*(const Quat& lhs, T rhs) {
 Quat operator*(T lhs, const Quat& rhs) {
     return rhs * lhs;
 }
+
+Quat operator-(const Quat &quat) {
+    return Quat(-quat.s, quat.v);
+}

@@ -9,7 +9,7 @@
 
 const int VOXEL_TEXTURE = 128;
 
-const Vec3i TEXTURE_DIMS = Vec3i(256, 256, 256);
+const Vec3i TEXTURE_DIMS = Vec3i(512, 512, 512);
 
 const uint32_t CHUNK_SIZE = 32;
 
@@ -35,9 +35,11 @@ public:
 
     void Init();
 
-    void RegisterVoxelObject(const VoxelObject<uint8_t> &object);
+    void RegisterVoxelObject(const VoxelObject &object);
 
-    std::vector<Vec3i> GetTextureOffsets(int object_id);
+    std::vector<Vec3i> GetLodOffsets(int object_id);
+
+    Vec3i GetDataOffset(int object_id);
 
     void check();
 
@@ -48,5 +50,6 @@ private:
 
     GLuint gl_texture_id;
 
-    std::map<int, std::vector<Vec3i>> texture_offsets;
+    std::map<int, std::vector<Vec3i>> lod_offsets;
+    std::map<int, Vec3i> data_offset;
 };

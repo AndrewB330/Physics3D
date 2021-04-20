@@ -32,6 +32,10 @@ struct Vec3 {
 
     bool operator<(const Vec3 &other) const;
 
+    static Vec3 Min(const Vec3 & lhs, const Vec3& rhs);
+
+    static Vec3 Max(const Vec3 & lhs, const Vec3& rhs);
+
 private:
     static RandomGen rand;
 };

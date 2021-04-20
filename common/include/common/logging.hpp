@@ -4,8 +4,8 @@
 #include <sstream>
 #include <iostream>
 
-#ifdef SDL_VERSION
 #include <SDL_log.h>
+#ifdef SDL_VERSION
 #endif
 
 enum class LogType {
@@ -27,7 +27,8 @@ public:
         snprintf(buffer, 1024, message.c_str(), args...);
         std::string formatted = std::string(buffer);
         logs_list.push_back({type, formatted});
-#ifdef SDL_VERSION
+
+
         switch(type) {
             case LogType::LOG_INFO:
                 SDL_LogInfo(0, formatted.c_str());
@@ -39,6 +40,7 @@ public:
                 SDL_LogError(0, formatted.c_str());
                 break;
         }
+#ifdef SDL
 #else
         std::cout << PrefixByType(type) << " " << logs_list.back().message << std::endl;
 #endif

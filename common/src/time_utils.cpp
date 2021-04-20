@@ -25,14 +25,14 @@ double FPSMeter::GetFPS() const {
     if (times.empty()) {
         return 0;
     }
-    return MAX_FRAMES_COUNT / (times.front() - times.back());
+    return times.size() / (times.back() - times.front());
 }
 
 double FPSMeter::GetMs() const {
     if (times.empty()) {
         return 0;
     }
-    return  (times.front() - times.back()) / MAX_FRAMES_COUNT * 1000.0;
+    return  (times.back() - times.front()) / times.size() * 1000.0;
 }
 
 void FPSMeter::StartFrame() {
@@ -44,5 +44,5 @@ void FPSMeter::EndFrame() {
     while(times.size() > MAX_FRAMES_COUNT) {
         times.pop();
     }
-    times.push(time);
+    times.push((times.empty() ? 0 : times.back()) + time);
 }

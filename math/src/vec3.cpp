@@ -65,6 +65,14 @@ bool Vec3::operator<(const Vec3 &other) const {
     return (x != other.x ? x < other.x : y < other.y);
 }
 
+Vec3 Vec3::Min(const Vec3 &lhs, const Vec3 &rhs) {
+    return Vec3(std::min(lhs.x, rhs.x), std::min(lhs.y, rhs.y), std::min(lhs.z, rhs.z));
+}
+
+Vec3 Vec3::Max(const Vec3 &lhs, const Vec3 &rhs) {
+    return Vec3(std::max(lhs.x, rhs.x), std::max(lhs.y, rhs.y), std::max(lhs.z, rhs.z));
+}
+
 Vec3 operator+(const Vec3 &lhs, const Vec3 &rhs) {
     return Vec3(lhs) += rhs;
 }

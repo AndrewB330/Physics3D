@@ -35,3 +35,25 @@ void Transform::Rotate(const Quat &rotation_) {
 }
 
 void Transform::TransformUpdated() {}
+
+double Transform::GetScale() const {
+    return scale;
+}
+
+void Transform::SetScale(double scale_) {
+    scale = scale_;
+    TransformUpdated();
+}
+
+void Transform::Scale(double factor) {
+    scale *= scale;
+    TransformUpdated();
+}
+
+Vec3 Transform::ApplyTransform(Vec3 point) const {
+    return rotation.ApplyRotation(point * scale) + translation;
+}
+
+Vec3 Transform::ApplyTransformInv(Vec3 point) const {
+    return rotation.ApplyInvRotation(point - translation) / scale;
+}

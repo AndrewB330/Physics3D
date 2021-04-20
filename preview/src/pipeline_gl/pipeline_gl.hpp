@@ -55,13 +55,19 @@ public:
 
 
 /*BIND_VALUE*/
-    void UpdateUniformMainProjectionMatU();
-    void UpdateUniformMainModelViewMatU();
-    void UpdateUniformMainGridDimsU(const Vec3i & value);
-    void UpdateUniformMainVoxelsU(const int & value);
-    void UpdateUniformMainMaxLodU(const int & value);
-    void UpdateUniformMainVoxelSizeU(const float & value);
-    void UpdateUniformMainTextureOffsetsU(const std::vector<Vec3i> & value);
+    void SetMainDataTexture(const int & value);
+    void SetMainCurrentObjectDims(const Vec3i & value);
+    void SetMainCurrentObjectMaxLod(const int & value);
+    void SetMainCurrentObjectVoxelSize(const float & value);
+    void SetMainCurrentObjectLodOffsets(const std::vector<Vec3i> & value);
+    void SetMainCurrentObjectDataOffset(const Vec3i & value);
+    void SetMainCurrentObjectTransform(const Mat4 & value);
+    void SetMainGlobalShadowDims(const Vec3i & value);
+    void SetMainGlobalShadowMaxLod(const int & value);
+    void SetMainGlobalShadowVoxelSize(const float & value);
+    void SetMainGlobalShadowLodOffsets(const std::vector<Vec3i> & value);
+    void SetMainGlobalShadowTransformInv(const Mat4 & value);
+    void SetMainIndex(const int & value);
 
 
 private:
@@ -80,12 +86,6 @@ private:
 
     void UniformMat4(GLint location, const Mat4 & mat);
 
-    void UniformProjection(GLint location);
-
-    void UniformModelView(GLint location);
-
-    void UniformCameraTranslation(GLint location);
-
     int current_width;
     int current_height;
 
@@ -103,13 +103,19 @@ private:
     // == main ==
     GLuint main_p;
     std::function<void(void)> main_func = nullptr;
-    GLint main_projectionMat_u_inp;
-    GLint main_modelViewMat_u_inp;
-    GLint main_gridDims_u_inp;
-    GLint main_voxels_u_inp;
-    GLint main_maxLod_u_inp;
-    GLint main_voxelSize_u_inp;
-    GLint main_textureOffsets_u_inp;
+    GLint main_dataTexture_inp;
+    GLint main_currentObject_dims_inp;
+    GLint main_currentObject_maxLod_inp;
+    GLint main_currentObject_voxelSize_inp;
+    GLint main_currentObject_lodOffsets_inp;
+    GLint main_currentObject_dataOffset_inp;
+    GLint main_currentObject_transform_inp;
+    GLint main_globalShadow_dims_inp;
+    GLint main_globalShadow_maxLod_inp;
+    GLint main_globalShadow_voxelSize_inp;
+    GLint main_globalShadow_lodOffsets_inp;
+    GLint main_globalShadow_transformInv_inp;
+    GLint main_index_inp;
 
     // Uniforms(uni)
 

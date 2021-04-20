@@ -32,7 +32,7 @@ public:
 private:
     std::queue<double> times;
 
-    const int MAX_FRAMES_COUNT = 60;
+    const int MAX_FRAMES_COUNT = 120;
 
     Timer timer;
 };

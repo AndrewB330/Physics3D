@@ -9,7 +9,7 @@
 
 class Camera : public WindowListener {
 public:
-    Camera(const Vec3 &position = Vec3());
+    explicit Camera(const Vec3 &position = Vec3());
 
     bool ProcessEvent(const SDL_Event &event) override;
 
@@ -48,7 +48,7 @@ private:
 
     std::unordered_map<int, bool> pressed;
 
-    double pitch = 0.0;
+    double pitch = PI/2;
     double yaw = 0.0;
     double roll = 0.0;
 

@@ -37,6 +37,9 @@ bool DebugUI::ProcessEvent(const SDL_Event &event) {
 }
 
 void DebugUI::Redraw() {
+    fps_meter.EndFrame();
+    fps_meter.StartFrame();
+
     int width, height;
     SDL_GetWindowSize(sdl_window, &width, &height);
 
@@ -46,6 +49,7 @@ void DebugUI::Redraw() {
     ImGui_ImplSDL2_NewFrame(sdl_window);
     ImGui::NewFrame();
 
+    // Logs
     ImGui::SetNextWindowSize({width - 16.f, 0});
     ImGui::SetNextWindowSizeConstraints({width - 16.f, 32}, {width - 16.f, 128});
     ImGui::SetNextWindowPos({8, height - 8.0f}, 0, {0.f, 1.f});
@@ -58,6 +62,16 @@ void DebugUI::Redraw() {
         if (s.type == LogType::LOG_ERROR)
             ImGui::Text("[ERROR] %s", s.message.c_str());
     }
+    ImGui::SetItemDefaultFocus();
+    ImGui::End();
+
+    // Fps
+    ImGui::SetNextWindowSize({128, 64});
+    ImGui::SetNextWindowSizeConstraints({64, 64}, {256, 128});
+    ImGui::SetNextWindowPos({8, 8.0f}, 0, {0.f, 0.f});
+    ImGui::Begin("Stats", nullptr, ImGuiWindowFlags_NoResize);
+    ImGui::Text("FPS: %.02f", fps_meter.GetFPS());
+    ImGui::Text("Time: %.02f ms", fps_meter.GetMs());
     ImGui::SetItemDefaultFocus();
     ImGui::End();
 

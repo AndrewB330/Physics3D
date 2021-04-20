@@ -1,6 +1,7 @@
 #include <application/window.hpp>
 #include <common/logging.hpp>
 #include <GL/glew.h>
+#include <common/time_utils.hpp>
 
 Window::~Window() {
     if (sdl_window != nullptr) {
@@ -88,6 +89,9 @@ void Window::Redraw() {
         return;
     }
 
+    static FPSMeter fps;
+    fps.StartFrame();
+
     for (auto &l : listeners) {
         l->StartFrameEvent();
     }
@@ -96,7 +100,15 @@ void Window::Redraw() {
     for (auto &r : renderers) {
         r->Redraw();
     }
+
     SDL_GL_SwapWindow(sdl_window);
+
+    fps.EndFrame();
+    static int step = 0;
+    if (step % 60 == 0) {
+        Logger::LogInfo("FPS: %.02f, SPF: %.02fms", fps.GetFPS(), fps.GetMs());
+    }
+    step++;
 }
 
 void Window::AddRenderer(std::shared_ptr<WindowRenderer> renderer) {

@@ -2,6 +2,7 @@
 
 #include <application/window_renderer.hpp>
 #include <imgui/imgui.h>
+#include <common/time_utils.hpp>
 
 class DebugUI : public WindowRenderer, public WindowListener {
 public:
@@ -21,4 +22,6 @@ private:
 
     SDL_Window * sdl_window = nullptr;
     SDL_GLContext gl_context = nullptr;
+
+    FPSMeter fps_meter;
 };

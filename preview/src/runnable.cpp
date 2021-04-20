@@ -9,24 +9,23 @@ extern "C" { __declspec(dllexport) unsigned long NvOptimusEnablement = 0x0000000
 
 
 int main(int argc, char ** argv) {
-    int a = GL_TEXTURE0;
-    int b = GL_TEXTURE5;
-    int c = GL_TEXTURE9;
-    int d = GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS;
     Application app;
     app.Init();
 
     WindowInfo game_window;
     game_window.title = "Voxels Preview";
+    game_window.maximized = false;
+    game_window.width = 1280;
+    game_window.height = 720;
 
     auto debug_ui = std::make_shared<DebugUI>();
     auto game = std::make_shared<GameComponent>();
     auto controls = std::make_shared<Controls>();
-    auto camera = std::make_shared<Camera>();
+    auto camera = std::make_shared<Camera>(Vec3(0, 16, 0));
 
     game->SetCamera(camera);
 
-    app.CreateWindow(game_window, {game, debug_ui}, {debug_ui, controls, camera});
+    app.CreateWindow(game_window, {game}, {controls, camera});
 
     while(app.AnyWindowAlive()) {
         app.PollEvents();

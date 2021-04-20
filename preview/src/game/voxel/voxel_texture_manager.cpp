@@ -3,15 +3,21 @@
 #include "voxel_texture_manager.hpp"
 
 
-void VoxelTextureManager::RegisterVoxelObject(const VoxelObject<uint8_t> &object) {
-    if (texture_offsets.find(object.GetId()) != texture_offsets.end()) {
+void VoxelTextureManager::RegisterVoxelObject(const VoxelObject &object) {
+    if (lod_offsets.find(object.GetId()) != lod_offsets.end()) {
         return;
     }
-    auto &offsets = texture_offsets[object.GetId()];
+
+    auto &offsets = lod_offsets[object.GetId()];
+
+    if (object.HasData()) {
+        data_offset[object.GetId()] = allocator.Allocate(object.GetDims());
+        UpdateTexture(data_offset[object.GetId()], object.GetDims(), object.GetDataPointer());
+    }
 
     for (int i = 0; i < object.GetFirstFullLod(); i++) {
-        offsets.push_back(allocator.Allocate(object.GetCompressedGridDims(i)));
-        UpdateTexture(offsets.back(), object.GetCompressedGridDims(i), object.GetDataPointer(i));
+        offsets.push_back(allocator.Allocate(object.GetLodDims(i)));
+        UpdateTexture(offsets.back(), object.GetLodDims(i), object.GetLodDataPointer(i));
     }
 }
 
@@ -32,19 +38,18 @@ void VoxelTextureManager::Init() {
 }
 
 void VoxelTextureManager::UpdateTexture(const Vec3i &offset, Vec3i dims, const uint8_t *data) {
-    std::vector<uint8_t> v;
-    for (int i = 0; i < dims.x * dims.y * dims.z; i++) {
-        v.push_back(data[i]);
-    }
-
     glTextureSubImage3D(gl_texture_id, 0,
                         offset.x, offset.y, offset.z,
                         dims.x, dims.y, dims.z, GL_RED_INTEGER,
                         GL_UNSIGNED_BYTE, data);
 }
 
-std::vector<Vec3i> VoxelTextureManager::GetTextureOffsets(int object_id) {
-    return texture_offsets[object_id];
+std::vector<Vec3i> VoxelTextureManager::GetLodOffsets(int object_id) {
+    return lod_offsets[object_id];
+}
+
+Vec3i VoxelTextureManager::GetDataOffset(int object_id) {
+    return data_offset[object_id];
 }
 
 VoxelTextureManager::VoxelTextureManager() : allocator(TEXTURE_DIMS) {}

@@ -33,6 +33,7 @@ private:
     static RandomGen rand;
 };
 
+Quat operator-(const Quat & quat);
 Quat operator+(const Quat& lhs, const Quat& rhs);
 Quat operator*(const Quat& lhs, const Quat& rhs);
 Quat operator*(const Vec3& lhs, const Quat& rhs);
